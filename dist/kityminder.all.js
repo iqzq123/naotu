@@ -1,6 +1,6 @@
 /*!
  * ====================================================
- * kityminder - v1.0.0 - 2014-04-15
+ * kityminder - v1.0.0 - 2014-04-28
  * https://github.com/fex-team/kityminder
  * GitHub: https://github.com/fex-team/kityminder.git 
  * Copyright (c) 2014 f-cube @ FEX; Licensed MIT
@@ -12,7 +12,7 @@
 var KityMinder = window.KM = window.KityMinder = function () {
 	var instanceMap = {}, instanceId = 0;
 	return {
-		version: '1.1.1',
+		version: '1.2.0',
 		createMinder: function ( renderTarget, options ) {
 			options = options || {};
 			options.renderTo = Utils.isString( renderTarget ) ? document.getElementById( renderTarget ) : renderTarget;
@@ -378,11 +378,8 @@ var MinderNode = KityMinder.MinderNode = kity.createClass( "MinderNode", {
         this.rc = new kity.Group();
         this.rc.addClass( 'km-minderNode' );
         this.rc.minderNode = this;
-
         this._createBgGroup();
         this._createContGroup();
-        this._createIconShape();
-        this._createTextShape();
     },
     _createGroup: function ( type ) {
         var g = new kity.Group();
@@ -394,16 +391,6 @@ var MinderNode = KityMinder.MinderNode = kity.createClass( "MinderNode", {
     },
     _createContGroup: function () {
         this._createGroup( 'contrc' );
-    },
-    _createTextShape: function () {
-        var textShape = new kity.Text( this.getData( 'text' ) || '' );
-        textShape.setAttr( '_nodeTextShape', true );
-        this.getContRc().appendShape( textShape );
-    },
-    _createIconShape: function () {
-        var g = new kity.Group();
-        this.getContRc().appendShape( g );
-        this._iconRc = g;
     },
     getContRc: function () {
         var groups = this.rc.getShapesByType( 'group' ),
@@ -426,9 +413,6 @@ var MinderNode = KityMinder.MinderNode = kity.createClass( "MinderNode", {
             }
         } );
         return result;
-    },
-    getIconRc: function () {
-        return this._iconRc;
     },
     setPoint: function ( x, y ) {
         if ( arguments.length < 2 ) {
@@ -676,6 +660,8 @@ var MinderNode = KityMinder.MinderNode = kity.createClass( "MinderNode", {
                 return false;
             }
         } );
+        if(textShape === undefined)
+            debugger
         return textShape;
     },
     isSelected: function () {
@@ -823,6 +809,7 @@ var Minder = KityMinder.Minder = kity.createClass( "KityMinder", {
         this._root.setType( "root" );
         if ( this._options.renderTo ) {
             this.renderTo( this._options.renderTo );
+            //this._paper.setStyle( 'font-family', 'Arial,"Microsoft YaHei",sans-serif' );
         }
     },
     _addRenderContainer: function () {
@@ -1045,7 +1032,7 @@ function importNode( node, json, km ) {
     for ( var field in data ) {
         node.setData( field, data[ field ] );
     }
-    node.setText( data.text || km.getLang( DEFAULT_TEXT[ node.getType() ] ) );
+    node.setData( 'text',data.text || km.getLang( DEFAULT_TEXT[ node.getType() ] ) );
 
     var childrenTreeData = json.children;
     if ( !childrenTreeData ) return;
@@ -1057,6 +1044,7 @@ function importNode( node, json, km ) {
     return node;
 }
 
+
 // 导入导出
 kity.extendClass( Minder, {
     exportData: function ( protocalName ) {
@@ -1064,6 +1052,13 @@ kity.extendClass( Minder, {
 
         json = exportNode( this.getRoot() );
         protocal = KityMinder.findProtocal( protocalName );
+
+        if(this._fire( new MinderEvent( 'beforeexport',  {
+            json:json,
+            protocalName: protocalName,
+            protocal: protocal
+        },true ) ) === true) return;
+
         if ( protocal ) {
             return protocal.encode( json, this );
         } else {
@@ -1100,15 +1095,47 @@ kity.extendClass( Minder, {
         var stoped = this._fire( new MinderEvent( 'beforeimport', params, true ) );
         if ( stoped ) return this;
 
+
+        //*******************
+        function ts(d, str, last){
+            var h = d.getHours(),
+                m = d.getMinutes(),
+                s = d.getSeconds(),
+                ms = d.getMilliseconds();
+
+            if(last){
+                console.log('--- '+str+': '+(d-last)+' ---');
+            }else{
+                console.log('--- '+str+' ---');
+            }
+            
+            return d;
+        }
+
+        var t1 = ts(new Date(), '开始解析');
+        //*******************
+
         json = params.json || ( params.json = protocal.decode( local ) );
 
         if ( typeof json === 'object' && 'then' in json ) {
             var self = this;
             json.then( local, function ( data ) {
+                //*******************
+                var t2 = ts(new Date(), '解压解析耗时', t1);
+                //*******************
                 self._afterImportData( data, params );
+                //*******************
+                ts(new Date(), '渲染耗时', t2);
+                //*******************
             } );
         } else {
+            //*******************
+            var t2 = ts(new Date(), '解压解析耗时', t1);
+            //*******************
             this._afterImportData( json, params );
+            //*******************
+            ts(new Date(), '渲染耗时', t2);
+            //*******************
         }
         return this;
     },
@@ -1154,6 +1181,7 @@ kity.extendClass( Minder, {
         this._paper.on( 'click dblclick mousedown contextmenu mouseup mousemove mousewheel DOMMouseScroll touchstart touchmove touchend', this._firePharse.bind( this ) );
         if ( window ) {
             window.addEventListener( 'resize', this._firePharse.bind( this ) );
+            window.addEventListener( 'blur', this._firePharse.bind( this ) );
         }
     },
     _bindKeyboardEvents: function () {
@@ -1541,6 +1569,261 @@ KM.defaultOptions = {
     readyOnly:false
 };
 
+/**
+ * 浏览器判断模块
+ * @file
+ * @module UE.browser
+ * @since 1.2.6.1
+ */
+
+/**
+ * 提供浏览器检测的模块
+ * @unfile
+ * @module KM.browser
+ */
+var browser = KityMinder.browser = function(){
+    var agent = navigator.userAgent.toLowerCase(),
+        opera = window.opera,
+        browser = {
+        /**
+         * @property {boolean} ie 检测当前浏览器是否为IE
+         * @example
+         * ```javascript
+         * if ( UE.browser.ie ) {
+         *     console.log( '当前浏览器是IE' );
+         * }
+         * ```
+         */
+        ie		:  /(msie\s|trident.*rv:)([\w.]+)/.test(agent),
+
+        /**
+         * @property {boolean} opera 检测当前浏览器是否为Opera
+         * @example
+         * ```javascript
+         * if ( UE.browser.opera ) {
+         *     console.log( '当前浏览器是Opera' );
+         * }
+         * ```
+         */
+        opera	: ( !!opera && opera.version ),
+
+        /**
+         * @property {boolean} webkit 检测当前浏览器是否是webkit内核的浏览器
+         * @example
+         * ```javascript
+         * if ( UE.browser.webkit ) {
+         *     console.log( '当前浏览器是webkit内核浏览器' );
+         * }
+         * ```
+         */
+        webkit	: ( agent.indexOf( ' applewebkit/' ) > -1 ),
+
+        /**
+         * @property {boolean} mac 检测当前浏览器是否是运行在mac平台下
+         * @example
+         * ```javascript
+         * if ( UE.browser.mac ) {
+         *     console.log( '当前浏览器运行在mac平台下' );
+         * }
+         * ```
+         */
+        mac	: ( agent.indexOf( 'macintosh' ) > -1 ),
+
+        /**
+         * @property {boolean} quirks 检测当前浏览器是否处于“怪异模式”下
+         * @example
+         * ```javascript
+         * if ( UE.browser.quirks ) {
+         *     console.log( '当前浏览器运行处于“怪异模式”' );
+         * }
+         * ```
+         */
+        quirks : ( document.compatMode == 'BackCompat' )
+    };
+
+    /**
+    * @property {boolean} gecko 检测当前浏览器内核是否是gecko内核
+    * @example
+    * ```javascript
+    * if ( UE.browser.gecko ) {
+    *     console.log( '当前浏览器内核是gecko内核' );
+    * }
+    * ```
+    */
+    browser.gecko =( navigator.product == 'Gecko' && !browser.webkit && !browser.opera && !browser.ie);
+
+    var version = 0;
+
+    // Internet Explorer 6.0+
+    if ( browser.ie ){
+
+        var v1 =  agent.match(/(?:msie\s([\w.]+))/);
+        var v2 = agent.match(/(?:trident.*rv:([\w.]+))/);
+        if(v1 && v2 && v1[1] && v2[1]){
+            version = Math.max(v1[1]*1,v2[1]*1);
+        }else if(v1 && v1[1]){
+            version = v1[1]*1;
+        }else if(v2 && v2[1]){
+            version = v2[1]*1;
+        }else{
+            version = 0;
+        }
+
+        browser.ie11Compat = document.documentMode == 11;
+        /**
+         * @property { boolean } ie9Compat 检测浏览器模式是否为 IE9 兼容模式
+         * @warning 如果浏览器不是IE， 则该值为undefined
+         * @example
+         * ```javascript
+         * if ( UE.browser.ie9Compat ) {
+         *     console.log( '当前浏览器运行在IE9兼容模式下' );
+         * }
+         * ```
+         */
+        browser.ie9Compat = document.documentMode == 9;
+
+        /**
+         * @property { boolean } ie8 检测浏览器是否是IE8浏览器
+         * @warning 如果浏览器不是IE， 则该值为undefined
+         * @example
+         * ```javascript
+         * if ( UE.browser.ie8 ) {
+         *     console.log( '当前浏览器是IE8浏览器' );
+         * }
+         * ```
+         */
+        browser.ie8 = !!document.documentMode;
+
+        /**
+         * @property { boolean } ie8Compat 检测浏览器模式是否为 IE8 兼容模式
+         * @warning 如果浏览器不是IE， 则该值为undefined
+         * @example
+         * ```javascript
+         * if ( UE.browser.ie8Compat ) {
+         *     console.log( '当前浏览器运行在IE8兼容模式下' );
+         * }
+         * ```
+         */
+        browser.ie8Compat = document.documentMode == 8;
+
+        /**
+         * @property { boolean } ie7Compat 检测浏览器模式是否为 IE7 兼容模式
+         * @warning 如果浏览器不是IE， 则该值为undefined
+         * @example
+         * ```javascript
+         * if ( UE.browser.ie7Compat ) {
+         *     console.log( '当前浏览器运行在IE7兼容模式下' );
+         * }
+         * ```
+         */
+        browser.ie7Compat = ( ( version == 7 && !document.documentMode )
+                || document.documentMode == 7 );
+
+        /**
+         * @property { boolean } ie6Compat 检测浏览器模式是否为 IE6 模式 或者怪异模式
+         * @warning 如果浏览器不是IE， 则该值为undefined
+         * @example
+         * ```javascript
+         * if ( UE.browser.ie6Compat ) {
+         *     console.log( '当前浏览器运行在IE6模式或者怪异模式下' );
+         * }
+         * ```
+         */
+        browser.ie6Compat = ( version < 7 || browser.quirks );
+
+        browser.ie9above = version > 8;
+
+        browser.ie9below = version < 9;
+
+    }
+
+    // Gecko.
+    if ( browser.gecko ){
+        var geckoRelease = agent.match( /rv:([\d\.]+)/ );
+        if ( geckoRelease )
+        {
+            geckoRelease = geckoRelease[1].split( '.' );
+            version = geckoRelease[0] * 10000 + ( geckoRelease[1] || 0 ) * 100 + ( geckoRelease[2] || 0 ) * 1;
+        }
+    }
+
+    /**
+     * @property { Number } chrome 检测当前浏览器是否为Chrome, 如果是，则返回Chrome的大版本号
+     * @warning 如果浏览器不是chrome， 则该值为undefined
+     * @example
+     * ```javascript
+     * if ( UE.browser.chrome ) {
+     *     console.log( '当前浏览器是Chrome' );
+     * }
+     * ```
+     */
+    if (/chrome\/(\d+\.\d)/i.test(agent)) {
+        browser.chrome = + RegExp['\x241'];
+    }
+
+    /**
+     * @property { Number } safari 检测当前浏览器是否为Safari, 如果是，则返回Safari的大版本号
+     * @warning 如果浏览器不是safari， 则该值为undefined
+     * @example
+     * ```javascript
+     * if ( UE.browser.safari ) {
+     *     console.log( '当前浏览器是Safari' );
+     * }
+     * ```
+     */
+    if(/(\d+\.\d)?(?:\.\d)?\s+safari\/?(\d+\.\d+)?/i.test(agent) && !/chrome/i.test(agent)){
+    	browser.safari = + (RegExp['\x241'] || RegExp['\x242']);
+    }
+
+
+    // Opera 9.50+
+    if ( browser.opera )
+        version = parseFloat( opera.version() );
+
+    // WebKit 522+ (Safari 3+)
+    if ( browser.webkit )
+        version = parseFloat( agent.match( / applewebkit\/(\d+)/ )[1] );
+
+    /**
+     * @property { Number } version 检测当前浏览器版本号
+     * @remind
+     * <ul>
+     *     <li>IE系列返回值为5,6,7,8,9,10等</li>
+     *     <li>gecko系列会返回10900，158900等</li>
+     *     <li>webkit系列会返回其build号 (如 522等)</li>
+     * </ul>
+     * @example
+     * ```javascript
+     * console.log( '当前浏览器版本号是： ' + UE.browser.version );
+     * ```
+     */
+    browser.version = version;
+
+    /**
+     * @property { boolean } isCompatible 检测当前浏览器是否能够与UEditor良好兼容
+     * @example
+     * ```javascript
+     * if ( UE.browser.isCompatible ) {
+     *     console.log( '浏览器与UEditor能够良好兼容' );
+     * }
+     * ```
+     */
+    browser.isCompatible =
+        !browser.mobile && (
+        ( browser.ie && version >= 6 ) ||
+        ( browser.gecko && version >= 10801 ) ||
+        ( browser.opera && version >= 9.5 ) ||
+        ( browser.air && version >= 1 ) ||
+        ( browser.webkit && version >= 522 ) ||
+        false );
+    return browser;
+}();
+//快捷方式
+var ie = browser.ie,
+    webkit = browser.webkit,
+    gecko = browser.gecko,
+    opera = browser.opera;
+
 KityMinder.Geometry = ( function () {
 	var g = {};
 	var min = Math.min,
@@ -1713,8 +1996,8 @@ KityMinder.registerModule( "HistoryModule", function () {
             this.km.initStyle();
 
             this.update();
-            this.km.fire('restoreScene');
-            this.km.fire('contentChange');
+            this.km.fire( 'restoreScene' );
+            this.km.fire( 'contentChange' );
         },
         getScene: function () {
             return new Scene( this.km.getRoot() )
@@ -1750,16 +2033,26 @@ KityMinder.registerModule( "HistoryModule", function () {
     this.historyManager = new HistoryManager( this );
 
     var keys = {
-            /*Shift*/ 16:1, /*Ctrl*/ 17:1, /*Alt*/ 18:1,/*Command*/91:1,
-            37:1, 38:1, 39:1, 40:1
-        },
+        /*Shift*/
+        16: 1,
+        /*Ctrl*/
+        17: 1,
+        /*Alt*/
+        18: 1,
+        /*Command*/
+        91: 1,
+        37: 1,
+        38: 1,
+        39: 1,
+        40: 1
+    },
         keycont = 0,
         lastKeyCode,
         saveSceneTimer;
     return {
         defaultOptions: {
             maxUndoCount: 20,
-            maxInputCount:20
+            maxInputCount: 20
         },
         "commands": {
             "undo": kity.createClass( "UndoCommand", {
@@ -1800,36 +2093,36 @@ KityMinder.registerModule( "HistoryModule", function () {
             "saveScene": function ( e ) {
                 this.historyManager.saveScene();
             },
-            "renderNode":function(e){
+            "renderNode": function ( e ) {
                 var node = e.node;
 
-                if(node.isHighlight()){
-                    km.select(node);
+                if ( node.isHighlight() ) {
+                    km.select( node );
                 }
             },
-            "keydown":function(e){
+            "keydown": function ( e ) {
                 var orgEvt = e.originEvent;
                 var keyCode = orgEvt.keyCode || orgEvt.which;
-                if (!keys[keyCode] && !orgEvt.ctrlKey && !orgEvt.metaKey && !orgEvt.shiftKey && !orgEvt.altKey) {
+                if ( !keys[ keyCode ] && !orgEvt.ctrlKey && !orgEvt.metaKey && !orgEvt.shiftKey && !orgEvt.altKey ) {
 
 
-                    if (km.historyManager.list.length == 0) {
+                    if ( km.historyManager.list.length == 0 ) {
                         km.historyManager.saveScene();
                     }
-                    clearTimeout(saveSceneTimer);
+                    clearTimeout( saveSceneTimer );
 
-                    saveSceneTimer = setTimeout(function(){
+                    saveSceneTimer = setTimeout( function () {
                         km.historyManager.saveScene();
-                    },200);
+                    }, 200 );
 
                     lastKeyCode = keyCode;
                     keycont++;
-                    if (keycont >= km.getOptions('maxInputCount') ) {
+                    if ( keycont >= km.getOptions( 'maxInputCount' ) ) {
                         km.historyManager.saveScene()
                     }
                 }
             },
-            "import":function(){
+            "import": function () {
                 this.historyManager.reset()
             }
         }
@@ -1928,27 +2221,27 @@ KityMinder.registerModule( "IconModule", function () {
 			"progress": setProgressCommand
 		},
 		"events": {
-			"RenderNode": function ( e ) {
-				var node = e.node;
-				var iconRc = node.getIconRc();
-				var contRc = node.getContRc();
-				var PriorityIconVal = node.getData( "PriorityIcon" );
-				var ProgressIconVal = node.getData( "ProgressIcon" );
-				//依次排布图标、文字
-				iconRc.clear();
-				var PriorityIconWidth = 0;
-				if ( PriorityIconVal ) {
-					renderPriorityIcon( node, PriorityIconVal );
-					PriorityIconWidth = 22;
-				}
-				if ( ProgressIconVal ) {
-					renderProgressIcon( node, ProgressIconVal, PriorityIconWidth + 10 );
-				}
-				var iconWidth = iconRc.getWidth();
-				var textShape = node.getTextShape();
-				if ( iconWidth ) textShape.setTransform( new kity.Matrix().translate( iconWidth + 5, 0 ) );
-				else textShape.setTransform( new kity.Matrix().translate( 0, 0 ) );
-				iconRc.setTransform( new kity.Matrix().translate( 0, -( iconRc.getHeight() + textShape.getHeight() ) / 2 ) );
+			"RenderNodeLeft": function ( e ) {
+				// var node = e.node;
+				// var iconRc = new kity.Group();
+				// var contRc = node.getContRc();
+				// var PriorityIconVal = node.getData( "PriorityIcon" );
+				// var ProgressIconVal = node.getData( "ProgressIcon" );
+				// //依次排布图标、文字
+				// //iconRc.clear();
+				// var PriorityIconWidth = 0;
+				// if ( PriorityIconVal ) {
+				// 	renderPriorityIcon( node, PriorityIconVal );
+				// 	PriorityIconWidth = 22;
+				// }
+				// if ( ProgressIconVal ) {
+				// 	renderProgressIcon( node, ProgressIconVal, PriorityIconWidth + 10 );
+				// }
+				// var iconWidth = iconRc.getWidth();
+				// //var textShape = node.getTextShape();
+				// //if ( iconWidth ) textShape.setTransform( new kity.Matrix().translate( iconWidth + 5, 0 ) );
+				// //else textShape.setTransform( new kity.Matrix().translate( 0, 0 ) );
+				// iconRc.setTransform( new kity.Matrix().translate( 0, -( iconRc.getHeight() + textShape.getHeight() ) / 2 ) );
 			}
 		}
 	};
@@ -1963,6 +2256,7 @@ KityMinder.registerModule( "LayoutModule", function () {
 		getLayoutStyle: function ( name ) {
 			return this._layoutStyles[ name ];
 		},
+
 		getLayoutStyleItems: function () {
 			var items = [];
 			for ( var key in this._layoutStyles ) {
@@ -1978,6 +2272,10 @@ KityMinder.registerModule( "LayoutModule", function () {
 			var _root = this.getRoot();
 			_root.setData( "currentstyle", name );
 			return name;
+		},
+		getCurrentLayoutStyle: function () {
+			var curStyle = this.getCurrentStyle();
+			return this.getLayoutStyle( curStyle ).getCurrentLayoutStyle.call( this );
 		},
 		highlightNode: function ( node ) {
 			var curStyle = this.getCurrentStyle();
@@ -2063,7 +2361,7 @@ KityMinder.registerModule( "LayoutModule", function () {
 			execute: function ( km, node, focus, silbling ) {
 				var parent = km.getSelectedNode();
 
-				if( !parent ){
+				if ( !parent ) {
 					return null;
 				}
 
@@ -2090,7 +2388,7 @@ KityMinder.registerModule( "LayoutModule", function () {
 			base: Command,
 			execute: function ( km, node, focus ) {
 				var selectedNode = km.getSelectedNode();
-				if( !selectedNode ){
+				if ( !selectedNode ) {
 					return null;
 				}
 
@@ -2119,7 +2417,7 @@ KityMinder.registerModule( "LayoutModule", function () {
 			base: Command,
 			execute: function ( km ) {
 
-				if( km.getRoot().children.length == 0 ){
+				if ( km.getRoot().children.length == 0 ) {
 					return;
 				}
 
@@ -2342,8 +2640,8 @@ KityMinder.registerModule( "LayoutDefault", function () {
 		var Layout = node.getLayout();
 		var nodeType = node.getType();
 		var nodeStyle = nodeStyles[ nodeType ];
-		var txtShape = node.getTextShape();
-		txtShape.fill( nodeStyle.color ).setSize( nodeStyle.fontSize ).setY( -3 );
+		//var txtShape = node.getTextShape();
+		//txtShape.fill( nodeStyle.color ).setSize( nodeStyle.fontSize ).setY( -3 );
 		if ( nodeType === "root" ) {
 			Layout.leftList = [];
 			Layout.rightList = [];
@@ -2385,7 +2683,7 @@ KityMinder.registerModule( "LayoutDefault", function () {
 		default:
 			break;
 		}
-		contRc.setTransform( new kity.Matrix().translate( nodeStyle.padding[ 3 ], nodeStyle.padding[ 0 ] + node.getTextShape().getHeight() ) );
+		contRc.setTransform( new kity.Matrix().translate( nodeStyle.padding[ 3 ], nodeStyle.padding[ 0 ] + _contRCHeight / 2 ) );
 	};
 	//计算节点在垂直方向的位置
 	var updateLayoutVertical = function ( node, parent, action ) {
@@ -2603,21 +2901,24 @@ KityMinder.registerModule( "LayoutDefault", function () {
 		}
 	};
 
-	var showNodeInView = function( node ){
+	var showNodeInView = function ( node ) {
 		var padding = 5;
-        var viewport = minder.getPaper().getViewPort();
-        var offset = node.getRenderContainer().getRenderBox( minder.getRenderContainer() );
+		var viewport = minder.getPaper().getViewPort();
+		var offset = node.getRenderContainer().getRenderBox( minder.getRenderContainer() );
 
-        var tmpX = viewport.center.x * 2 - (offset.x + offset.width);
-        var tmpY = viewport.center.y * 2 - (offset.y + offset.height);
+		var tmpX = viewport.center.x * 2 - ( offset.x + offset.width );
+		var tmpY = viewport.center.y * 2 - ( offset.y + offset.height );
 
-        var dx = offset.x < 0 ? -offset.x : Math.min(tmpX, 0);
-        var dy = offset.y < 0 ? -offset.y : Math.min(tmpY, 0);
+		var dx = offset.x < 0 ? -offset.x : Math.min( tmpX, 0 );
+		var dy = offset.y < 0 ? -offset.y : Math.min( tmpY, 0 );
 
-        km.getRenderContainer().fxTranslate( dx, dy, 100, "easeOutQuint" );
+		km.getRenderContainer().fxTranslate( dx, dy, 100, "easeOutQuint" );
 	};
 
 	var _style = {
+		getCurrentLayoutStyle: function () {
+			return nodeStyles;
+		},
 		highlightNode: function ( node ) {
 			var highlight = node.isHighlight();
 			var nodeType = node.getType();
@@ -2644,18 +2945,22 @@ KityMinder.registerModule( "LayoutDefault", function () {
 			default:
 				break;
 			}
-			this._fire( new MinderEvent( "beforeRenderNode", {
-				node: node
-			}, false ) );
-			this._fire( new MinderEvent( "RenderNode", {
-				node: node
-			}, false ) );
 		},
 		updateLayout: function ( node ) {
-			this._fire( new MinderEvent( "beforeRenderNode", {
+			node.getContRc().clear();
+			this._firePharse( new MinderEvent( "RenderNodeLeft", {
 				node: node
 			}, false ) );
-			this._fire( new MinderEvent( "RenderNode", {
+			this._firePharse( new MinderEvent( "RenderNodeCenter", {
+				node: node
+			}, false ) );
+			this._firePharse( new MinderEvent( "RenderNodeRight", {
+				node: node
+			}, false ) );
+			this._firePharse( new MinderEvent( "RenderNodeBottom", {
+				node: node
+			}, false ) );
+			this._firePharse( new MinderEvent( "RenderNodeTop", {
 				node: node
 			}, false ) );
 
@@ -2667,6 +2972,9 @@ KityMinder.registerModule( "LayoutDefault", function () {
 				translateNode( set[ i ] );
 				updateConnectAndshIcon( set[ i ] );
 			}
+            if(this.isNodeSelected(node)){
+                this.highlightNode(node)
+            }
 		},
 		initStyle: function () {
 			var _root = minder.getRoot();
@@ -2677,10 +2985,20 @@ KityMinder.registerModule( "LayoutDefault", function () {
 			_root.getLayout().align = "center";
 			updateBg( _root );
 			initLayout( _root );
-			this._fire( new MinderEvent( "beforeRenderNode", {
+			_root.getContRc().clear();
+			this._firePharse( new MinderEvent( "RenderNodeLeft", {
 				node: _root
 			}, false ) );
-			this._fire( new MinderEvent( "RenderNode", {
+			this._firePharse( new MinderEvent( "RenderNodeCenter", {
+				node: _root
+			}, false ) );
+			this._firePharse( new MinderEvent( "RenderNodeRight", {
+				node: _root
+			}, false ) );
+			this._firePharse( new MinderEvent( "RenderNodeBottom", {
+				node: _root
+			}, false ) );
+			this._firePharse( new MinderEvent( "RenderNodeTop", {
 				node: _root
 			}, false ) );
 			updateShapeByCont( _root );
@@ -2779,10 +3097,25 @@ KityMinder.registerModule( "LayoutDefault", function () {
 			//计算位置等流程
 			updateBg( node );
 			initLayout( node );
-			this._fire( new MinderEvent( "beforeRenderNode", {
+			// this._fire( new MinderEvent( "beforeRenderNode", {
+			// 	node: node
+			// }, false ) );
+			// this._fire( new MinderEvent( "RenderNode", {
+			// 	node: node
+			// }, false ) );
+			this._firePharse( new MinderEvent( "RenderNodeLeft", {
 				node: node
 			}, false ) );
-			this._fire( new MinderEvent( "RenderNode", {
+			this._firePharse( new MinderEvent( "RenderNodeCenter", {
+				node: node
+			}, false ) );
+			this._firePharse( new MinderEvent( "RenderNodeRight", {
+				node: node
+			}, false ) );
+			this._firePharse( new MinderEvent( "RenderNodeBottom", {
+				node: node
+			}, false ) );
+			this._firePharse( new MinderEvent( "RenderNodeTop", {
 				node: node
 			}, false ) );
 			updateShapeByCont( node );
@@ -2794,7 +3127,7 @@ KityMinder.registerModule( "LayoutDefault", function () {
 				updateConnectAndshIcon( set[ i ] );
 			}
 
-			if( focus ){
+			if ( focus ) {
 				showNodeInView( node );
 			}
 		},
@@ -3023,8 +3356,8 @@ KityMinder.registerModule( "LayoutBottom", function () {
 		var Layout = node.getLayout();
 		var nodeType = node.getType();
 		var nodeStyle = nodeStyles[ nodeType ];
-		var txtShape = node.getTextShape();
-		txtShape.fill( nodeStyle.color ).setSize( nodeStyle.fontSize ).setY( -3 );
+		// var txtShape = node.getTextShape();
+		// txtShape.fill( nodeStyle.color ).setSize( nodeStyle.fontSize ).setY( -3 );
 		if ( nodeType === "main" ) {
 			var subgroup = Layout.subgroup = new kity.Group();
 			minder.getRenderContainer().addShape( subgroup );
@@ -3054,7 +3387,7 @@ KityMinder.registerModule( "LayoutBottom", function () {
 		default:
 			break;
 		}
-		contRc.setTransform( new kity.Matrix().translate( nodeStyle.padding[ 3 ], nodeStyle.padding[ 0 ] + node.getTextShape().getHeight() ) );
+		contRc.setTransform( new kity.Matrix().translate( nodeStyle.padding[ 3 ], nodeStyle.padding[ 0 ] + _contRCHeight / 2 ) );
 	};
 	var updateLayoutMain = function () {
 		var _root = minder.getRoot();
@@ -3230,6 +3563,9 @@ KityMinder.registerModule( "LayoutBottom", function () {
 		}
 	};
 	var _style = {
+		getCurrentLayoutStyle: function () {
+			return nodeStyles;
+		},
 		highlightNode: function ( node ) {
 			var highlight = node.isHighlight();
 			var nodeType = node.getType();
@@ -3248,21 +3584,24 @@ KityMinder.registerModule( "LayoutBottom", function () {
 			default:
 				break;
 			}
-			this._fire( new MinderEvent( "beforeRenderNode", {
-				node: node
-			}, false ) );
-			this._fire( new MinderEvent( "RenderNode", {
-				node: node
-			}, false ) );
 		},
 		updateLayout: function ( node ) {
-			this._fire( new MinderEvent( "beforeRenderNode", {
+			node.getContRc().clear();
+			this._firePharse( new MinderEvent( "RenderNodeLeft", {
 				node: node
 			}, false ) );
-			this._fire( new MinderEvent( "RenderNode", {
+			this._firePharse( new MinderEvent( "RenderNodeCenter", {
 				node: node
 			}, false ) );
-
+			this._firePharse( new MinderEvent( "RenderNodeRight", {
+				node: node
+			}, false ) );
+			this._firePharse( new MinderEvent( "RenderNodeBottom", {
+				node: node
+			}, false ) );
+			this._firePharse( new MinderEvent( "RenderNodeTop", {
+				node: node
+			}, false ) );
 			updateShapeByCont( node );
 			var set = updateLayoutAll( node, node.getParent(), "change" );
 			for ( var i = 0; i < set.length; i++ ) {
@@ -3284,10 +3623,20 @@ KityMinder.registerModule( "LayoutBottom", function () {
 			_root.getLayout().align = "center";
 			updateBg( _root );
 			initLayout( _root );
-			this._fire( new MinderEvent( "beforeRenderNode", {
+			_root.getContRc().clear();
+			this._firePharse( new MinderEvent( "RenderNodeLeft", {
 				node: _root
 			}, false ) );
-			this._fire( new MinderEvent( "RenderNode", {
+			this._firePharse( new MinderEvent( "RenderNodeCenter", {
+				node: _root
+			}, false ) );
+			this._firePharse( new MinderEvent( "RenderNodeRight", {
+				node: _root
+			}, false ) );
+			this._firePharse( new MinderEvent( "RenderNodeBottom", {
+				node: _root
+			}, false ) );
+			this._firePharse( new MinderEvent( "RenderNodeTop", {
 				node: _root
 			}, false ) );
 			updateShapeByCont( _root );
@@ -3334,10 +3683,26 @@ KityMinder.registerModule( "LayoutBottom", function () {
 			//计算位置等流程
 			updateBg( node );
 			initLayout( node );
-			this._fire( new MinderEvent( "beforeRenderNode", {
+			// this._fire( new MinderEvent( "beforeRenderNode", {
+			// 	node: node
+			// }, false ) );
+			// this._fire( new MinderEvent( "RenderNode", {
+			// 	node: node
+			// }, false ) );
+			node.getRenderContainer().clear();
+			this._firePharse( new MinderEvent( "RenderNodeLeft", {
 				node: node
 			}, false ) );
-			this._fire( new MinderEvent( "RenderNode", {
+			this._firePharse( new MinderEvent( "RenderNodeCenter", {
+				node: node
+			}, false ) );
+			this._firePharse( new MinderEvent( "RenderNodeRight", {
+				node: node
+			}, false ) );
+			this._firePharse( new MinderEvent( "RenderNodeBottom", {
+				node: node
+			}, false ) );
+			this._firePharse( new MinderEvent( "RenderNodeTop", {
 				node: node
 			}, false ) );
 			updateShapeByCont( node );
@@ -4021,6 +4386,11 @@ KityMinder.registerModule( "DropFile", function () {
 		e.stopPropagation();
 		var minder = this;
 
+		if( kity.Browser.ie && Number(kity.Browser.version) < 10 ){
+			alert('文件导入对IE浏览器仅支持10以上版本');
+			return;
+		}
+
 		var files = e.dataTransfer.files;
 
 		if ( files ) {
@@ -4225,8 +4595,8 @@ KityMinder.registerModule( "KeyboardModule", function () {
                     break;
                 case keys.Backspace:
                 case keys.Del:
-                    this.execCommand( 'removenode' );
                     e.preventDefault();
+                    if ( this.queryCommandState( 'removenode' ) !== -1 ) this.execCommand( 'removenode' );
                     break;
 
                 case keys.Left:
@@ -4592,6 +4962,9 @@ KityMinder.registerModule( "TextEditModule", function () {
             'selectionclear':function(){
                 km.setStatus('normal');
                 receiver.setTextEditStatus(false).clear()
+            },
+            blur:function(){
+                receiver.clear()
             }
         }
     };
@@ -4651,8 +5024,8 @@ Minder.Range = kity.createClass('Range',{
 });
 
 //接收者
-Minder.Receiver = kity.createClass('Receiver',{
-    clear : function(){
+Minder.Receiver = kity.createClass( 'Receiver', {
+    clear: function () {
         this.container.innerHTML = '';
         this.selection && this.selection.setHide();
         this.range && this.range.nativeSel.removeAllRanges();
@@ -4660,337 +5033,347 @@ Minder.Receiver = kity.createClass('Receiver',{
         this.inputLength = 0;
         return this;
     },
-    setTextEditStatus : function(status){
+    setTextEditStatus: function ( status ) {
         this.textEditStatus = status || false;
         return this;
     },
-    isTextEditStatus:function(){
+    isTextEditStatus: function () {
         return this.textEditStatus;
     },
-    constructor : function(km){
-        this.setKityMinder(km);
+    constructor: function ( km ) {
+        this.setKityMinder( km );
         this.textEditStatus = false;
-        var _div = document.createElement('div');
-        _div.setAttribute('contenteditable',true);
+        var _div = document.createElement( 'div' );
+        _div.setAttribute( 'contenteditable', true );
         _div.className = 'km_receiver';
-        this.container = document.body.insertBefore(_div,document.body.firstChild);
-        utils.addCssRule('km_receiver_css',' .km_receiver{position:absolute;padding:0;margin:0;word-wrap:break-word;clip:rect(1em 1em 1em 1em);}');//
-        this.km.on('textedit.beforekeyup textedit.keydown textedit.paste', utils.proxy(this.keyboardEvents,this));
+        this.container = document.body.insertBefore( _div, document.body.firstChild );
+        utils.addCssRule( 'km_receiver_css', ' .km_receiver{position:absolute;padding:0;margin:0;word-wrap:break-word;clip:rect(1em 1em 1em 1em);}' ); //
+        this.km.on( 'textedit.beforekeyup textedit.keydown textedit.paste', utils.proxy( this.keyboardEvents, this ) );
         this.timer = null;
         this.index = 0;
     },
-    setRange : function(range,index){
+    setRange: function ( range, index ) {
 
         this.index = index || this.index;
 
         var text = this.container.firstChild;
         this.range = range;
-        range.setStart(text || this.container, this.index).collapse(true);
+        range.setStart( text || this.container, this.index ).collapse( true );
         var me = this;
-        setTimeout(function(){
+        setTimeout( function () {
             me.container.focus();
             range.select()
-        });
+        } );
         return this;
     },
-    setTextShape:function(textShape){
-        if(!textShape){
+    setTextShape: function ( textShape ) {
+        if ( !textShape ) {
             textShape = new kity.Text();
         }
         this.textShape = textShape;
         this.container.innerHTML = textShape.getContent();
         return this;
     },
-    setTextShapeSize:function(size){
-        this.textShape.setSize(size);
+    setTextShapeSize: function ( size ) {
+        this.textShape.setSize( size );
         return this;
     },
-    getTextShapeHeight:function(){
+    getTextShapeHeight: function () {
         return this.textShape.getRenderBox().height;
     },
-    appendTextShapeToPaper:function(paper){
-        paper.addShape(this.textShape);
+    appendTextShapeToPaper: function ( paper ) {
+        paper.addShape( this.textShape );
         return this;
     },
-    setKityMinder:function(km){
+    setKityMinder: function ( km ) {
         this.km = km;
         return this;
     },
-    setMinderNode:function(node){
+    setMinderNode: function ( node ) {
         this.minderNode = node;
         return this;
     },
-    keyboardEvents : function(e){
+    keyboardEvents: function ( e ) {
 
-        clearTimeout(this.timer);
+        clearTimeout( this.timer );
         var me = this;
         var orgEvt = e.originEvent;
         var keyCode = orgEvt.keyCode;
         var keys = KityMinder.keymap;
-        function setTextToContainer(){
-            var text = me.container.textContent.replace(/[\u200b\t\r\n]/g,'');
 
-            if(me.textShape.getOpacity() == 0){
-                me.textShape.setOpacity(1);
+        function setTextToContainer() {
+            var text = me.container.textContent.replace( /[\u200b\t\r\n]/g, '' );
+
+            if ( me.textShape.getOpacity() == 0 ) {
+                me.textShape.setOpacity( 1 );
             }
-            me.textShape.setContent(text);
+            //#46 修复在ff下定位到文字后方空格光标不移动问题
+            if ( browser.gecko && /\s$/.test( text ) ) {
+                text += "\u200b";
+            }
+            me.textShape.setContent( text );
             me.setContainerStyle();
-            me.minderNode.setText(text);
-            if(text.length == 0){
-                me.textShape.setContent('a');
-                me.textShape.setOpacity(0);
+            me.minderNode.setText( text );
+            if ( text.length == 0 ) {
+                me.textShape.setContent( 'a' );
+                me.textShape.setOpacity( 0 );
             }
-            me.km.updateLayout(me.minderNode);
+            me.km.updateLayout( me.minderNode );
+
+
+            me.textShape = me.minderNode.getTextShape();
             me.setBaseOffset();
             me.updateTextData();
 
             me.updateIndex();
             me.updateSelection();
 
-            me.timer = setTimeout(function(){
+            me.timer = setTimeout( function () {
                 me.selection.setShow()
-            },500);
+            }, 500 );
         }
-        switch(e.type){
+        switch ( e.type ) {
 
-            case 'keydown':
-                switch ( e.originEvent.keyCode ) {
-                    case keys.Enter:
-                    case keys.Tab:
-                        this.selection.setHide();
-                        this.clear().setTextEditStatus(false);
-                        this.km.fire('contentchange');
-                        this.km.setStatus('normal');
-                        e.preventDefault();
-                        break;
-                }
-
-                if ( e.originEvent.ctrlKey ||  e.originEvent.metaKey ){
-
-                    //粘贴
-                    if(keyCode == keymap.v){
-
-                        setTimeout(function(){
-                            me.range.updateNativeRange().insertNode($('<span>$$_kityminder_bookmark_$$</span>')[0]);
-                            me.container.innerHTML = me.container.textContent.replace(/[\u200b\t\r\n]/g,'');
-                            var index = me.container.textContent.indexOf('$$_kityminder_bookmark_$$');
-                            me.container.textContent = me.container.textContent.replace('$$_kityminder_bookmark_$$','');
-                            me.range.setStart(me.container.firstChild,index).collapse(true).select();
-                            setTextToContainer()
-                        },100);
-                    }
-                    //剪切
-                    if(keyCode == keymap.x){
-                        setTimeout(function(){
-                            setTextToContainer()
-                        },100);
-                    }
-                    return;
-                }
+        case 'keydown':
+            switch ( e.originEvent.keyCode ) {
+            case keys.Enter:
+            case keys.Tab:
+                this.selection.setHide();
+                this.clear().setTextEditStatus( false );
+                this.km.fire( 'contentchange' );
+                this.km.setStatus( 'normal' );
+                e.preventDefault();
                 break;
-            case 'beforekeyup':
+            }
 
+            if ( e.originEvent.ctrlKey || e.originEvent.metaKey ) {
 
-                switch(keyCode){
-                    case keymap.Enter:
-                    case keymap.Tab:
-                        if(this.keydownNode === this.minderNode){
-                            this.rollbackStatus();
-                            this.setTextEditStatus(false);
-                            this.clear();
-                        }
-                        e.preventDefault();
-                        return;
-                    case keymap.Shift:
-                    case keymap.Control:
-                    case keymap.Alt:
-                    case keymap.Cmd:
-                        return;
+                //粘贴
+                if ( keyCode == keymap.v ) {
 
+                    setTimeout( function () {
+                        me.range.updateNativeRange().insertNode( $( '<span>$$_kityminder_bookmark_$$</span>' )[ 0 ] );
+                        me.container.innerHTML = me.container.textContent.replace( /[\u200b\t\r\n]/g, '' );
+                        var index = me.container.textContent.indexOf( '$$_kityminder_bookmark_$$' );
+                        me.container.textContent = me.container.textContent.replace( '$$_kityminder_bookmark_$$', '' );
+                        me.range.setStart( me.container.firstChild, index ).collapse( true ).select();
+                        setTextToContainer()
+                    }, 100 );
                 }
+                //剪切
+                if ( keyCode == keymap.x ) {
+                    setTimeout( function () {
+                        setTextToContainer()
+                    }, 100 );
+                }
+                return;
+            }
+            break;
+        case 'beforekeyup':
 
-                setTextToContainer();
-                return true;
+
+            switch ( keyCode ) {
+            case keymap.Enter:
+            case keymap.Tab:
+                if ( this.keydownNode === this.minderNode ) {
+                    this.rollbackStatus();
+                    this.setTextEditStatus( false );
+                    this.clear();
+                }
+                e.preventDefault();
+                return;
+            case keymap.Shift:
+            case keymap.Control:
+            case keymap.Alt:
+            case keymap.Cmd:
+                return;
+
+            }
+
+            setTextToContainer();
+            return true;
         }
 
 
     },
 
-    updateIndex:function(){
+    updateIndex: function () {
         this.index = this.range.getStart().startOffset;
     },
-    updateTextData : function(){
-        this.textShape.textData =  this.getTextOffsetData();
+    updateTextData: function () {
+        this.textShape.textData = this.getTextOffsetData();
     },
-    setSelection : function(selection){
+    setSelection: function ( selection ) {
         this.selection = selection;
         return this;
     },
-    updateSelection : function(){
+    updateSelection: function () {
         this.selection.setShowHold();
         this.selection.bringTop();
         //更新模拟选区的范围
-        this.selection.setStartOffset(this.index).collapse(true);
-        if(this.index == this.textData.length){
-            if(this.index == 0){
-                this.selection.setPosition(this.getBaseOffset())
-            }else{
-                this.selection.setPosition({
-                    x : this.textData[this.index-1].x + this.textData[this.index-1].width,
-                    y : this.textData[this.index-1].y
-                })
+        this.selection.setStartOffset( this.index ).collapse( true );
+        if ( this.index == this.textData.length ) {
+            if ( this.index == 0 ) {
+                this.selection.setPosition( this.getBaseOffset() )
+            } else {
+                this.selection.setPosition( {
+                    x: this.textData[ this.index - 1 ].x + this.textData[ this.index - 1 ].width,
+                    y: this.textData[ this.index - 1 ].y
+                } )
             }
 
 
-        }else{
-            this.selection.setPosition(this.textData[this.index])
+        } else {
+            this.selection.setPosition( this.textData[ this.index ] )
         }
         return this;
     },
-    getBaseOffset:function(){
-        return this.textShape.getRenderBox('top');
+    getBaseOffset: function () {
+        return this.textShape.getRenderBox( 'top' );
     },
-    setBaseOffset :function(){
-        this.offset = this.textShape.getRenderBox('top');
+    setBaseOffset: function () {
+        this.offset = this.textShape.getRenderBox( 'top' );
         return this;
     },
-    setContainerStyle : function(){
+    setContainerStyle: function () {
         var textShapeBox = this.textShape.getRenderBox();
 
-        this.container.style.cssText =  ";left:" + this.offset.x
-            + 'px;top:' + (this.offset.y+textShapeBox.height)
-            + 'px;width:' + textShapeBox.width
-            + 'px;height:' + textShapeBox.height + 'px;';
+        this.container.style.cssText = ";left:" + this.offset.x + 'px;top:' + ( this.offset.y + textShapeBox.height ) + 'px;width:' + textShapeBox.width + 'px;height:' + textShapeBox.height + 'px;';
         return this;
     },
-    getTextOffsetData:function(){
+    getTextOffsetData: function () {
         var text = this.textShape.getContent();
         this.textData = [];
 
-        for(var i= 0,l = text.length;i<l;i++){
-            var box = this.textShape.getExtentOfChar(i);
-            this.textData.push({
-                x:box.x + this.offset.x,
-                y:this.offset.y,
-                width:box.width,
-                height:box.height
-            })
+        for ( var i = 0, l = text.length; i < l; i++ ) {
+            try {
+                var box = this.textShape.getExtentOfChar( i );
+            } catch ( e ) {
+                debugger
+            }
+
+            this.textData.push( {
+                x: box.x + this.offset.x,
+                y: this.offset.y,
+                width: box.width,
+                height: box.height
+            } )
         }
         return this;
     },
-    setCurrentIndex:function(offset){
+    setCurrentIndex: function ( offset ) {
         var me = this;
         this.getTextOffsetData();
         var hadChanged = false;
-        utils.each(this.textData,function(i,v){
+        utils.each( this.textData, function ( i, v ) {
             //点击开始之前
-            if(i == 0 && offset.x <= v.x){
+            if ( i == 0 && offset.x <= v.x ) {
                 me.index = 0;
                 return false;
             }
-
-            if(i == me.textData.length -1 && offset.x >= v.x){
-                me.index = me.textData.length;
-                return false;
-            }
-            if(offset.x >= v.x && offset.x <= v.x + v.width){
-                if(offset.x  - v.x > v.width/2){
+            if ( offset.x >= v.x && offset.x <= v.x + v.width ) {
+                if ( offset.x - v.x > v.width / 2 ) {
                     me.index = i + 1;
 
-                }else {
+                } else {
                     me.index = i
 
                 }
                 hadChanged = true;
                 return false;
             }
-        });
+            if ( i == me.textData.length - 1 && offset.x >= v.x ) {
+                me.index = me.textData.length;
+                return false;
+            }
+        } );
+
         return this;
 
     },
-    setSelectionHeight:function(){
-        this.selection.setHeight(this.getTextShapeHeight());
+    setSelectionHeight: function () {
+        this.selection.setHeight( this.getTextShapeHeight() );
         return this;
     },
 
-    updateSelectionByMousePosition:function(offset,dir){
+    updateSelectionByMousePosition: function ( offset, dir ) {
 
         var me = this;
-        utils.each(this.textData,function(i,v){
+        utils.each( this.textData, function ( i, v ) {
             //点击开始之前
-            if(i == 0 && offset.x <= v.x){
-                me.selection.setStartOffset(0);
+            if ( i == 0 && offset.x <= v.x ) {
+                me.selection.setStartOffset( 0 );
                 return false;
             }
 
-            if(i == me.textData.length -1 && offset.x >= v.x){
-                me.selection.setEndOffset(me.textData.length);
+            if ( i == me.textData.length - 1 && offset.x >= v.x ) {
+                me.selection.setEndOffset( me.textData.length );
                 return false;
             }
-            if(offset.x >= v.x && offset.x <= v.x + v.width){
+            if ( offset.x >= v.x && offset.x <= v.x + v.width ) {
 
-                if(me.index == i){
-                    if(i == 0){
-                        me.selection.setStartOffset(i)
+                if ( me.index == i ) {
+                    if ( i == 0 ) {
+                        me.selection.setStartOffset( i )
                     }
-                    if(offset.x <= v.x + v.width/2){
+                    if ( offset.x <= v.x + v.width / 2 ) {
                         me.selection.collapse()
-                    }else {
-                        me.selection.setEndOffset(i + (me.selection.endOffset > i || dir == 1 ? 1 : 0))
+                    } else {
+                        me.selection.setEndOffset( i + ( me.selection.endOffset > i || dir == 1 ? 1 : 0 ) )
                     }
 
-                }else if(i > me.index){
-                    me.selection.setStartOffset(me.index);
-                    me.selection.setEndOffset(i + 1)
-                }else{
-                    if(dir == 1){
-                        me.selection.setStartOffset(i + (offset.x >= v.x + v.width/2 ? 1 : 0));
-                    }else{
-                        me.selection.setStartOffset(i);
+                } else if ( i > me.index ) {
+                    me.selection.setStartOffset( me.index );
+                    me.selection.setEndOffset( i + 1 )
+                } else {
+                    if ( dir == 1 ) {
+                        me.selection.setStartOffset( i + ( offset.x >= v.x + v.width / 2 ? 1 : 0 ) );
+                    } else {
+                        me.selection.setStartOffset( i );
                     }
 
-                    me.selection.setEndOffset(me.index)
+                    me.selection.setEndOffset( me.index )
                 }
 
                 return false;
             }
-        });
+        } );
         return this;
     },
-    updateSelectionShow:function(){
-        var startOffset = this.textData[this.selection.startOffset],
-            endOffset = this.textData[this.selection.endOffset],
-            width = 0 ;
-        if(this.selection.collapsed){
-            this.selection.updateShow(startOffset||this.textData[this.textData.length-1],0);
+    updateSelectionShow: function () {
+        var startOffset = this.textData[ this.selection.startOffset ],
+            endOffset = this.textData[ this.selection.endOffset ],
+            width = 0;
+        if ( this.selection.collapsed ) {
+            this.selection.updateShow( startOffset || this.textData[ this.textData.length - 1 ], 0 );
             return this;
         }
-        if(!endOffset){
-            var lastOffset = this.textData[this.textData.length -1];
+        if ( !endOffset ) {
+            var lastOffset = this.textData[ this.textData.length - 1 ];
             width = lastOffset.x - startOffset.x + lastOffset.width;
-        }else{
+        } else {
             width = endOffset.x - startOffset.x;
         }
 
-        this.selection.updateShow(startOffset,width);
+        this.selection.updateShow( startOffset, width );
         return this;
     },
-    updateRange:function(range){
+    updateRange: function ( range ) {
         var node = this.container.firstChild;
-        range.setStart(node,this.selection.startOffset);
-        range.setEnd(node,this.selection.endOffset);
+        range.setStart( node, this.selection.startOffset );
+        range.setEnd( node, this.selection.endOffset );
         range.select();
         return this;
     },
-    setIndex:function(index){
+    setIndex: function ( index ) {
         this.index = index;
         return this
     },
-    setContainerTxt:function(txt){
+    setContainerTxt: function ( txt ) {
         this.container.textContent = txt;
         return this;
     }
-});
+} );
 
 //模拟光标
 Minder.Selection = kity.createClass( 'Selection', {
@@ -5092,13 +5475,12 @@ Minder.Selection = kity.createClass( 'Selection', {
         clearInterval( this.timer );
         var me = this,
             state = '';
+        me.setStyle( 'display', '' );
         if(this.collapsed){
             this.timer = setInterval( function () {
                 me.setStyle( 'display', state );
                 state = state ? '' : 'none';
-            }, 300 );
-        }else{
-            me.setStyle( 'display', '' );
+            }, 400 );
         }
 
         return this;
@@ -5202,7 +5584,7 @@ KityMinder.registerModule( "basestylemodule", function () {
             "italic": "ctrl+i" //italic
         },
         "events": {
-            "beforeRenderNode": function ( e ) {
+            "afterrendernodecenter": function ( e ) {
                 //加粗
                 if ( e.node.getData( 'bold' ) ) {
                     e.node.getTextShape().setAttr( 'font-weight', 'bold' );
@@ -5308,7 +5690,7 @@ KityMinder.registerModule( "fontmodule", function () {
         },
 
         "events": {
-            "beforeRenderNode": function ( e ) {
+            "afterrendernodecenter": function ( e ) {
                 var val;
                 if ( val = e.node.getData( 'fontfamily' ) ) {
                     e.node.getTextShape().setAttr( 'font-family', val );
@@ -5434,6 +5816,78 @@ KityMinder.registerModule( 'Zoom', function () {
 				}, 100 );
 
 				e.originEvent.preventDefault();
+			}
+		}
+	};
+} );
+
+KityMinder.registerModule( "NodeText", function () {
+    var km = this;
+    return {
+        events:{
+            'renderNodeCenter':function(e){
+                var node = e.node;
+                var width = node.getContRc().getWidth();
+                var textShape = new kity.Text( node.getData( 'text' ) || '' );
+                textShape.setAttr( '_nodeTextShape', true );
+                node.getContRc().appendShape( textShape );
+                var style = this.getCurrentLayoutStyle()[node.getType()];
+                textShape.fill(style.color).setSize(style.fontSize);
+                textShape.setPosition(width,textShape.getHeight() * 0.25)
+            }
+        }
+    }
+} );
+
+KityMinder.registerModule( "hyperlink", function () {
+
+	return {
+		"commands": {
+			"createlink" : kity.createClass( "hyperlink", {
+                base: Command,
+
+                execute: function (url) {
+
+                    var nodes = km.getSelectedNodes();
+                    if ( this.queryState( 'hyperlink' ) == 1 ) {
+                        utils.each( nodes, function ( i, n ) {
+                            n.setData( 'hyperlink' );
+
+                        } )
+                    } else {
+                        utils.each( nodes, function ( i, n ) {
+                            n.setData( 'hyperlink', url );
+                        } )
+                    }
+                },
+                queryState: function () {
+                    var nodes = km.getSelectedNodes(),
+                        result = 0;
+                    if ( nodes.length == 0 ) {
+                        return -1;
+                    }
+                    utils.each( nodes, function ( i, n ) {
+                        if ( n && n.getData( 'hyperlink' ) ) {
+                            result = 1;
+                            return false;
+                        }
+                    } );
+                    return result;
+                }
+            } )
+		},
+		"events": {
+			"RenderNodeRight": function ( e ) {
+		        var node = e.node,url;
+                if(url = node.getData('h')){
+                    var link = new kity.HyperLink(url);
+                    var rect = new kity.Rect();
+                    var box = node.getContRc().getBoundaryBox();
+                    rect.setWidth(10).setHeight(10).fill('#ccc').setPosition(box.x + box.width + 2,rect.getHeight()/-2);
+                    link.appendChild(rect);
+                    node.getContRc().appendChild(link);
+
+                }
 			}
 		}
 	};
@@ -6314,7 +6768,7 @@ KM.ui.define('colorpicker', {
                 "<%}%>" +
                 "<%}%>" +
                 "<%for( var i=0, label; label = items[i]; i++ ) {%>" +
-                "<li class=\"<%=itemClassName%><%if( selected == i ) {%> kmui-combobox-checked<%}%> kmui-combobox-item-<%=i%><%if( disabled[ i ] === true ) {%> kmui-combobox-item-disabled<%}%>\" data-item-index=\"<%=i%>\" unselectable=\"on\" onmousedown=\"return false\">" +
+                "<li class=\"<%=itemClassName%><%if( selected == i && enabledSelected ) {%> kmui-combobox-checked<%}%> kmui-combobox-item-<%=i%><%if( disabled[ i ] === true ) {%> kmui-combobox-item-disabled<%}%>\" data-item-index=\"<%=i%>\" unselectable=\"on\" onmousedown=\"return false\">" +
                 "<span class=\"kmui-combobox-icon\" unselectable=\"on\" onmousedown=\"return false\"></span>" +
                 "<label class=\"<%=labelClassName%>\" style=\"<%=itemStyles[ i ]%>\" unselectable=\"on\" onmousedown=\"return false\"><%=label%></label>" +
                 "</li>" +
@@ -6335,7 +6789,8 @@ KM.ui.define('colorpicker', {
                 autoRecord: true,
                 //最多记录条数
                 recordCount: 5,
-                enabledRecord:true
+                enabledRecord:true,
+                enabledSelected:true
             },
             init: function( options ){
 
@@ -6615,7 +7070,7 @@ KM.ui.define('colorpicker', {
 
                 var options = this.data("options"),
                     newStack = [];
-
+                debugger
                 if(this.data('options').enabledRecord){
                     $.each( options.recordStack, function( i, item ){
 
@@ -7404,14 +7859,15 @@ KM.registerToolbarUI( 'saveto', function ( name ) {
             itemStyles: [],
             value: [],
             autowidthitem: [],
-            enabledRecord: false
+            enabledRecord: false,
+            enabledSelected: false
         },
         $combox = null,
         comboboxWidget = null;
 
     utils.each( KityMinder.getAllRegisteredProtocals(), function ( k ) {
         var p = KityMinder.findProtocal( k );
-        if( p.encode ){
+        if ( p.encode ) {
             var text = p.fileDescription + '（' + p.fileExtension + '）';
             options.value.push( k );
             options.items.push( text );
@@ -7428,20 +7884,59 @@ KM.registerToolbarUI( 'saveto', function ( name ) {
         var a = document.createElement( 'a' );
         a.setAttribute( 'download', filename );
         a.setAttribute( 'href', url );
-        a.dispatchEvent( new MouseEvent( 'click' ) );
+        var evt;
+        try {
+            evt = new MouseEvent( 'click' );
+        } catch ( error ) {
+            evt = document.createEvent( 'MouseEvents' );
+            evt.initEvent( 'click', true, true );
+        }
+        a.dispatchEvent( evt );
     }
 
+    var ie_ver = function () {
+        var iev = 0;
+        var ieold = ( /MSIE (\d+\.\d+);/.test( navigator.userAgent ) );
+        var trident = !! navigator.userAgent.match( /Trident\/7.0/ );
+        var rv = navigator.userAgent.indexOf( "rv:11.0" );
+        if ( ieold ) iev = new Number( RegExp.$1 );
+        if ( navigator.appVersion.indexOf( "MSIE 10" ) != -1 ) iev = 10;
+        if ( trident && rv != -1 ) iev = 11;
+        return iev;
+    };
+    var doSave = function ( urltype, d, filename ) {
+        var iframe = document.createElement( 'iframe' );
+        iframe.style.display = 'none';
+        document.body.appendChild( iframe );
+        iframe.contentDocument.open( urltype, 'replace' );
+        iframe.contentDocument.writeln( d );
+        iframe.contentDocument.execCommand( 'saveas', '', filename );
+    };
     comboboxWidget.on( 'comboboxselect', function ( evt, res ) {
         var data = me.exportData( res.value );
         var p = KityMinder.findProtocal( res.value );
         var filename = me.getMinderTitle() + p.fileExtension;
-
         if ( typeof ( data ) == 'string' ) {
-            var url = 'data:text/plain; utf-8,' + encodeURI( data );
-            doDownload( url, filename );
+            var url = 'data:text/plain; utf-8,' + encodeURIComponent( data );
+            if ( ie_ver() > 0 ) {
+                //console.log( p.fileExtension );
+                if ( p.fileExtension === '.km' ) {
+                    doSave( 'application/x-javascript', data, me.getMinderTitle() );
+                } else if ( p.fileExtension === '.svg' ) {
+                    //doSave( 'image/svg+xml', data, filename );
+                } else {
+                    doSave( 'text/html', data, filename );
+                }
+            } else {
+                doDownload( url, filename );
+            }
         } else if ( data && data.then ) {
             data.then( function ( url ) {
-                doDownload( url, filename );
+                if ( ie_ver() > 0 ) {
+                    //doSave( 'application/base64', url.replace( 'image/octet-stream,', '' ), filename );
+                } else {
+                    doDownload( url, filename );
+                }
             } );
         }
     } ).on( "beforeshow", function () {
@@ -7616,12 +8111,12 @@ KM.registerToolbarUI( 'node', function ( name ) {
     //状态反射
     me.on( 'interactchange', function () {
         var state = 0;
-        utils.each(shortcutKeys,function(k){
-            state = me.queryCommandState(k);
-            if(state!=-1){
+        utils.each( shortcutKeys, function ( k ) {
+            state = me.queryCommandState( k );
+            if ( state != -1 ) {
                 return false;
             }
-        });
+        } );
         //设置按钮状态
         comboboxWidget.button().kmui().disabled( state == -1 ).active( state == 1 );
 
@@ -7981,101 +8476,99 @@ KityMinder.registerProtocal( 'mindmanager', function () {
 
     // 标签 map
     var markerMap = {
-         'urn:mindjet:Prio1'   : ['PriorityIcon', 1]
-        ,'urn:mindjet:Prio2'   : ['PriorityIcon', 2]
-        ,'urn:mindjet:Prio3'   : ['PriorityIcon', 3]
-        ,'urn:mindjet:Prio4'   : ['PriorityIcon', 4]
-        ,'urn:mindjet:Prio5'   : ['PriorityIcon', 5]
-
-        ,'0'   : ['ProgressIcon', 1]
-        ,'25'  : ['ProgressIcon', 2]
-        ,'50'  : ['ProgressIcon', 3]
-        ,'75'  : ['ProgressIcon', 4]
-        ,'100' : ['ProgressIcon', 5]
+        'urn:mindjet:Prio1': [ 'PriorityIcon', 1 ],
+        'urn:mindjet:Prio2': [ 'PriorityIcon', 2 ],
+        'urn:mindjet:Prio3': [ 'PriorityIcon', 3 ],
+        'urn:mindjet:Prio4': [ 'PriorityIcon', 4 ],
+        'urn:mindjet:Prio5': [ 'PriorityIcon', 5 ],
+        '0': [ 'ProgressIcon', 1 ],
+        '25': [ 'ProgressIcon', 2 ],
+        '50': [ 'ProgressIcon', 3 ],
+        '75': [ 'ProgressIcon', 4 ],
+        '100': [ 'ProgressIcon', 5 ]
     };
 
-    function processTopic(topic, obj){
+    function processTopic( topic, obj ) {
         //处理文本
-        obj.data = { text : topic.Text && topic.Text.PlainText || '' };  // 节点默认的文本，没有Text属性
+        obj.data = {
+            text: topic.Text && topic.Text.PlainText || ''
+        }; // 节点默认的文本，没有Text属性
 
         // 处理标签
-        if(topic.Task){
+        if ( topic.Task ) {
 
             var type;
-            if(topic.Task.TaskPriority){
+            if ( topic.Task.TaskPriority ) {
                 type = markerMap[ topic.Task.TaskPriority ];
-                type && (obj.data[ type[0] ] = type[1]);
+                type && ( obj.data[ type[ 0 ] ] = type[ 1 ] );
             }
 
-            if(topic.Task.TaskPercentage){
+            if ( topic.Task.TaskPercentage ) {
                 type = markerMap[ topic.Task.TaskPercentage ];
-                type && (obj.data[ type[0] ] = type[1]);
+                type && ( obj.data[ type[ 0 ] ] = type[ 1 ] );
             }
         }
 
         //处理子节点
-        if( topic.SubTopics && topic.SubTopics.Topic ){
+        if ( topic.SubTopics && topic.SubTopics.Topic ) {
 
             var tmp = topic.SubTopics.Topic;
-            if( tmp.length && tmp.length > 0 ){ //多个子节点
+            if ( tmp.length && tmp.length > 0 ) { //多个子节点
                 obj.children = [];
 
-                for(var i in tmp){
-                    obj.children.push({});
-                    processTopic(tmp[i], obj.children[i]);
+                for ( var i in tmp ) {
+                    obj.children.push( {} );
+                    processTopic( tmp[ i ], obj.children[ i ] );
                 }
 
-            }else{ //一个子节点
-                obj.children = [{}];
-                processTopic(tmp, obj.children[0]);
+            } else { //一个子节点
+                obj.children = [ {} ];
+                processTopic( tmp, obj.children[ 0 ] );
             }
         }
     }
 
-    function xml2km(xml){
-        var json = $.xml2json(xml);
+    function xml2km( xml ) {
+        var json = $.xml2json( xml );
         var result = {};
-        processTopic(json.OneTopic.Topic, result);
+        processTopic( json.OneTopic.Topic, result );
         return result;
     }
 
-    function getEntries(file, onend) {
-        zip.createReader(new zip.BlobReader(file), function(zipReader) {
-            zipReader.getEntries(onend);
-        }, onerror);
+    function getEntries( file, onend ) {
+        zip.createReader( new zip.BlobReader( file ), function ( zipReader ) {
+            zipReader.getEntries( onend );
+        }, onerror );
     }
 
-	return {
-		fileDescription: 'mindmanager格式文件',
-		fileExtension: '.mmap',
+    return {
+        fileDescription: 'mindmanager格式文件',
+        fileExtension: '.mmap',
 
-		decode: function ( local ) {
+        decode: function ( local ) {
 
-		    return {
-		    	then : function(local, callback){
+            return {
+                then: function ( local, callback ) {
 
-				    getEntries( local, function( entries ) {
-				        entries.forEach(function( entry ) {
-				            if(entry.filename == 'Document.xml'){
-				                entry.getData(new zip.TextWriter(), function(text) {
-				                    var km = xml2km($.parseXML(text));
-				                    callback && callback( km );
-				                });
-				            }
-				        });
-				    });
-		    	}
-		    };
+                    getEntries( local, function ( entries ) {
+                        entries.forEach( function ( entry ) {
+                            if ( entry.filename == 'Document.xml' ) {
+                                entry.getData( new zip.TextWriter(), function ( text ) {
+                                    var km = xml2km( $.parseXML( text ) );
+                                    callback && callback( km );
+                                } );
+                            }
+                        } );
+                    } );
+                }
+            };
 
-		},
-		// recognize: recognize,
-		recognizePriority: -1
-	};
-	
+        },
+        // recognize: recognize,
+        recognizePriority: -1
+    };
+
 } );
-
-
-
 
 KityMinder.registerProtocal( "plain", function () {
 	var LINE_ENDING = '\n',
@@ -8207,11 +8700,12 @@ KityMinder.registerProtocal( "png", function () {
 	function loadImage( url, callback ) {
 		var image = new Image();
 		image.onload = callback;
+		console.log( url );
 		image.src = url;
 	}
 
 	return {
-		fileDescription: 'PNG 图片',
+		fileDescription: 'PNG 图片（暂不支持IE）',
 		fileExtension: '.png',
 		encode: function ( json, km ) {
 			var domContainer = km.getPaper().container,
@@ -8232,7 +8726,7 @@ KityMinder.registerProtocal( "png", function () {
 				ctx = canvas.getContext( '2d' ),
 				blob, DomURL, url, img, finishCallback;
 
-
+			bgUrl = bgUrl.replace( /"/g, '' );
 			renderContainer.translate( -renderBox.x, -renderBox.y );
 
 			svgXml = km.getPaper().container.innerHTML;
@@ -8243,14 +8737,14 @@ KityMinder.registerProtocal( "png", function () {
 			$svg.attr( {
 				width: renderBox.width,
 				height: renderBox.height,
-				style: 'font-family: Arial, "Heiti SC", "Microsoft Yahei";'
+				style: 'font-family: Arial, "Microsoft Yahei","Heiti SC";'
 			} );
 
 			// need a xml with width and height
-			svgXml = $( '<div></div' ).append( $svg ).html();
+			svgXml = $( '<div></div>' ).append( $svg ).html();
 
 			// svg 含有 &nbsp; 符号导出报错 Entity 'nbsp' not defined
-			svgXml = svgXml.replace(/&nbsp;/g, '&#xa0;');
+			svgXml = svgXml.replace( /&nbsp;/g, '&#xa0;' );
 
 			blob = new Blob( [ svgXml ], {
 				type: "image/svg+xml;charset=utf-8"
@@ -8278,7 +8772,6 @@ KityMinder.registerProtocal( "png", function () {
 				var url = canvas.toDataURL( 'png' );
 				return url.replace( 'image/png', 'image/octet-stream' );
 			}
-
 			loadImage( url, function () {
 				var svgImage = this;
 				loadImage( bgUrl, function () {
@@ -8305,7 +8798,7 @@ KityMinder.registerProtocal( "png", function () {
 
 KityMinder.registerProtocal( "svg", function () {
 	return {
-		fileDescription: 'SVG 矢量图',
+		fileDescription: 'SVG 矢量图（暂不支持IE）',
 		fileExtension: '.svg',
 		encode: function ( json, km ) {
 			// svg 含有 &nbsp; 符号导出报错 Entity 'nbsp' not defined
