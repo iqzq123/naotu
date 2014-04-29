@@ -104,47 +104,15 @@ kity.extendClass( Minder, {
         var stoped = this._fire( new MinderEvent( 'beforeimport', params, true ) );
         if ( stoped ) return this;
 
-
-        //*******************
-        function ts(d, str, last){
-            var h = d.getHours(),
-                m = d.getMinutes(),
-                s = d.getSeconds(),
-                ms = d.getMilliseconds();
-
-            if(last){
-                console.log('--- '+str+': '+(d-last)+' ---');
-            }else{
-                console.log('--- '+str+' ---');
-            }
-            
-            return d;
-        }
-
-        var t1 = ts(new Date(), '开始解析');
-        //*******************
-
         json = params.json || ( params.json = protocal.decode( local ) );
 
         if ( typeof json === 'object' && 'then' in json ) {
             var self = this;
             json.then( local, function ( data ) {
-                //*******************
-                var t2 = ts(new Date(), '解压解析耗时', t1);
-                //*******************
                 self._afterImportData( data, params );
-                //*******************
-                ts(new Date(), '渲染耗时', t2);
-                //*******************
             } );
         } else {
-            //*******************
-            var t2 = ts(new Date(), '解压解析耗时', t1);
-            //*******************
             this._afterImportData( json, params );
-            //*******************
-            ts(new Date(), '渲染耗时', t2);
-            //*******************
         }
         return this;
     },

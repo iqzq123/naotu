@@ -345,74 +345,58 @@ $( function () {
 
         sto.getFileUrl( remotePath, {
             success: function ( url ) {
+                console.log(url);
                 // the url to download the file on cloud dist
                 var arr = remotePath.split( '.' );
                 var format = arr[ arr.length - 1 ];
-                if ( format in loadFile ) {
-                    loadFile[ format ]( url );
+                if ( format in fileConf ) {
+                    loadFile(url, format);
                 }
             },
             error: notice
         } );
     }
 
-    var loadFile = {
-        'km': loadPlainType,
-        'json': loadPlainType,
-        'xmind': loadXMind,
-        'mmap': loadMindManager,
-        'mm': loadFreeMind
+    var fileConf = {
+        'km': {
+            type : 'text',
+            protocal : 'json'
+        },
+        'json': {
+            type : 'text',
+            protocal : 'json'
+        },
+        'xmind': {
+            type : 'blob',
+            protocal : 'xmind'
+        },
+        'mmap': {
+            type : 'blob',
+            protocal : 'mindmanager'
+        },
+        'mm': {
+            type : 'text',
+            protocal : 'freemind'
+        }
     };
 
-    function loadPlainType( url ) {
-        $.ajax( {
-            cache: false,
-            url: url,
-            dataType: 'text',
-            success: function ( result ) {
-                importFile( result, 'json' );
-            }
-        } );
-    }
+    function loadFile( url, extension ){
+        if ( extension in fileConf ) {
 
-    function loadXMind( url ) {
+            var conf = fileConf[ extension ];
 
-        var xhr = new XMLHttpRequest();
-        xhr.open( "get", url, true );
-        xhr.responseType = "blob";
-        xhr.onload = function () {
-            if ( this.status == 200 && this.readyState ) {
-                var blob = this.response;
-                importFile( blob, 'xmind' );
-            }
-        };
-        xhr.send();
-    }
+            var xhr = new XMLHttpRequest();
+            xhr.open( "get", url, true );
+            xhr.responseType = conf.type;
+            xhr.onload = function () {
+                if ( this.status == 200 && this.readyState ) {
+                    var data = this.response;
+                    importFile( data, conf.protocal );
+                }
+            };
+            xhr.send();
 
-    function loadMindManager( url ) {
-
-        var xhr = new XMLHttpRequest();
-        xhr.open( "get", url, true );
-        xhr.responseType = "blob";
-        xhr.onload = function () {
-            if ( this.status == 200 && this.readyState ) {
-                var blob = this.response;
-                importFile( blob, 'mindmanager' );
-            }
-        };
-        xhr.send();
-
-    }
-
-    function loadFreeMind( url ) {
-        $.ajax( {
-            cache: false,
-            url: url,
-            dataType: 'text',
-            success: function ( result ) {
-                importFile( result, 'freemind' );
-            }
-        } );
+        }
     }
 
     // 见文件数据导入minder
