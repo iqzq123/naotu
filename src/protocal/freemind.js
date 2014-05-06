@@ -41,6 +41,11 @@ KityMinder.registerProtocal( 'freemind', function () {
             }
         }
         
+        // 处理超链接
+        if(topic.LINK){
+            obj.data.hyperlink = topic.LINK;
+        }
+
         //处理子节点
         if( topic.node ){
 
@@ -64,6 +69,7 @@ KityMinder.registerProtocal( 'freemind', function () {
         var json = $.xml2json(xml);
         var result = {};
         processTopic(json.node, result);
+        console.log(result);
         return result;
     }
 

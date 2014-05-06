@@ -48,6 +48,11 @@ KityMinder.registerProtocal( 'xmind', function () {
             }
         }
 
+        // 处理超链接
+        if(topic['xlink:href']){
+            obj.data.hyperlink = topic['xlink:href'];
+        }
+
         //处理子节点
         if( topic.children && topic.children.topics && topic.children.topics.topic ){
             var tmp = topic.children.topics.topic;
