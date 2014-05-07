@@ -18,71 +18,21 @@
     <script src="lib/jquery.xml2json.js" charset="utf-8"></script>
    
     <link href="themes/default/css/import.css" type="text/css" rel="stylesheet" />
-
+    
+    <link rel="stylesheet" href="pan/pan.css">
     <script src="pan/minder.third.js" charset="utf-8"></script>
 </head>
 <style>
-    .container{
-        background: #DDD;
-        position: absolute;
-        left: 50px;
-        right: 50px;
-        top: 50px;
-        /*bottom:50px;*/
-
-        height: 400px;
-    }
-
-    .container .close{
-        position: absolute;
-        right: -12px;
-        top: -17px;
-        border-radius: 20px;
-        width: 28px;
-        height: 28px;
-        background-color: #222;
-        color: #FFF;
-        border: 3px #FFF solid;
-        box-shadow: 2px 2px 9px #000;
-        font-size: 16px;
-        line-height: 30px;
-        text-indent: 9px;
-        font-family: Arial;
-        cursor: pointer;
-    }
-
-    .container .mask{
-        position: absolute;
-        left: 0px;
-        right: 0px;
-        top: 0px;
-        bottom: 0px;
-        background: rgba(0,0,0,0.5);
-    }
-
-    .container .loading{
-        position: absolute;
-        left: 50%;
-        top: 50%;
-        margin: -12px;
-    }
-
-    .files{
-        margin: 10px 200px;
-        line-height: 40px;
-    }
-
-    .files a{
-        color: #000;
-    }
 </style>
 <body>
-
-
     <div class="files">
-        <a class="file" data-extension="xmind" data-url="https://c.pcs.baidu.com/rest/2.0/pcs/file?path=%2Fapps%2Fkityminder%2F%E7%99%BE%E5%BA%A6xmind-%E7%BD%91%E7%9B%98.xmind&access_token=52.a168cdef7648c17628a0695e40771fd7.2592000.1401277148.2936331757-2246711&method=download" href="javascript:;">xmind格式</a>
+        <a class="file" data-extension="xmind" data-url="https://c.pcs.baidu.com/rest/2.0/pcs/file?path=%2Fapps%2Fkityminder%2F%E7%99%BE%E5%BA%A6xmind-%E7%BD%91%E7%9B%98.xmind&access_token=52.a168cdef7648c17628a0695e40771fd7.2592000.1401277148.2936331757-2246711&method=download" href="javascript:;">XMind 格式</a>
         &nbsp;&nbsp;&nbsp;&nbsp;
-        <a class="file" data-extension="km" data-url="https://c.pcs.baidu.com/rest/2.0/pcs/file?path=%2Fapps%2Fkityminder%2Fkm%E6%A0%BC%E5%BC%8F-%E7%BD%91%E7%9B%98.km&access_token=52.cadcb9ad33b982654c2d0cd641b33b54.2592000.1401332814.2936331757-2246711&method=download" href="javascript:;">KM格式</a>
+        <a class="file" data-extension="km" data-url="https://c.pcs.baidu.com/rest/2.0/pcs/file?path=%2Fapps%2Fkityminder%2Fkm%E6%A0%BC%E5%BC%8F-%E7%BD%91%E7%9B%98.km&access_token=52.cadcb9ad33b982654c2d0cd641b33b54.2592000.1401332814.2936331757-2246711&method=download" href="javascript:;">KM 格式</a>
+    </div>
+
+    <div id="minder-container">
+        
     </div>
 </body>
 <script>
@@ -119,10 +69,12 @@
 
         enableLoading(container);
 
-        KM.renderByUrl(id, url, extension, function(minder){
-            // console.log(minder);
-
+        var minder = KM.renderByUrl(id, url, extension, function(minder){
             disableLoading(container);
+        });
+
+        minder.on('renderprogress', function() {
+            
         });
     });
     

@@ -1,0 +1,66 @@
+.kmui-container .kmui-toolbar{
+    background-color: #fafafa;
+    z-index: 99999;
+    margin-right: 10px;
+}
+
+#minder-container {
+    background: #DDD;
+    position: absolute;
+    left: 50px;
+    right: 50px;
+    top: 50px;
+    height: 400px;
+}
+
+.container{
+    background: #DDD;
+    position: absolute;
+    left: 50px;
+    right: 50px;
+    top: 50px;
+    height: 400px;
+}
+
+.container .close{
+    position: absolute;
+    right: -12px;
+    top: -17px;
+    border-radius: 20px;
+    width: 28px;
+    height: 28px;
+    background-color: #222;
+    color: #FFF;
+    border: 3px #FFF solid;
+    box-shadow: 2px 2px 9px #000;
+    font-size: 16px;
+    line-height: 30px;
+    text-indent: 9px;
+    font-family: Arial;
+    cursor: pointer;
+}
+
+.container .mask{
+    position: absolute;
+    left: 0px;
+    right: 0px;
+    top: 0px;
+    bottom: 0px;
+    background: rgb(50, 60, 61) url(grid.png) repeat;
+}
+
+.container .loading{
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    margin: -12px;
+}
+
+.files{
+    margin: 10px 200px;
+    line-height: 40px;
+}
+
+.files a{
+    color: #000;
+}

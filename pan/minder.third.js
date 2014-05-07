@@ -29,9 +29,8 @@
         }
     };
 
-    var loadFile = function ( url, extension, minder, callback ) {
+    function loadFile( url, extension, minder, callback ) {
         if ( extension in fileConf ) {
-
             var conf = fileConf[ extension ];
 
             var xhr = new XMLHttpRequest();
@@ -45,7 +44,6 @@
                 }
             };
             xhr.send();
-
         }
     };
 
@@ -56,6 +54,8 @@
         minder = minder || KM.getKityMinder( domId );
 
         loadFile( url, extension, minder, callback );
+
+        return minder;
     };
 
 } )();
