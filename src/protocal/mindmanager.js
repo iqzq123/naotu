@@ -69,8 +69,11 @@ KityMinder.registerProtocal( 'mindmanager', function () {
 
     function xml2km( xml ) {
         var json = $.xml2json( xml );
+        
         var result = {};
         processTopic( json.OneTopic.Topic, result );
+
+        console.log(result);
         return result;
     }
 
