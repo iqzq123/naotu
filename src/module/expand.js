@@ -86,7 +86,7 @@ KityMinder.registerModule( "Expand", function () {
 		 */
 		collapse: function ( policy ) {
 			policy = policy || EXPAND_POLICY.KEEP_STATE;
-			policy( this, STATE_EXPAND, policy );
+			policy( this, STATE_COLLAPSE, policy );
 			return this;
 		},
 
@@ -97,12 +97,37 @@ KityMinder.registerModule( "Expand", function () {
 			return this.getData( EXPAND_STATE_DATA ) === STATE_EXPAND;
 		}
 	} );
+	var ExpandAllNodeCommand = kity.createClass( "ExpandAllNodeCommand", ( function () {
+		return {
+			base: Command,
+			execute: function ( km ) {
+				alert( '2' );
+			},
+			queryState: function ( km ) {
+				return 0;
+			}
+		};
+	} )() );
+	var CollapseAllNodeCommand = kity.createClass( "ExpandAllNodeCommand", ( function () {
+		return {
+			base: Command,
+			execute: function ( km ) {
+				alert( '1' );
+			},
+			queryState: function ( km ) {
+				return 0;
+			}
+		};
+	} )() );
 	return {
 		'events': {
-			'importData': function ( e ) {
-				var data = e.data;
+			'import': function ( e ) {
+				//console.log( this.getRoot() );
 			}
 		},
-		'commands': {}
+		'commands': {
+			'expand': ExpandAllNodeCommand,
+			'contract': CollapseAllNodeCommand
+		}
 	};
 } );

@@ -34,7 +34,9 @@ KityMinder.registerModule( "LayoutDefault", function () {
 				iconShape.addShapes( [ circle, plus, dec ] );
 				this.update();
 			},
-			switchState: function () {
+			switchState: function ( val ) {
+				if ( val === true || val === false )
+					this._show = !val;
 				if ( !this._show ) {
 					this._plus.setOpacity( 0 );
 					this._dec.setOpacity( 1 );
@@ -543,9 +545,7 @@ KityMinder.registerModule( "LayoutDefault", function () {
 			var mains = _root.getChildren();
 			for ( var i = 0; i < mains.length; i++ ) {
 				this.appendChildNode( _root, mains[ i ] );
-				//console.log( mains[ i ].isExpanded() );
 				if ( mains[ i ].isExpanded() && mains[ i ].getChildren().length > 0 ) {
-					debugger;
 					minder.expandNode( mains[ i ] );
 				}
 			}
@@ -565,10 +565,10 @@ KityMinder.registerModule( "LayoutDefault", function () {
 				node.expand();
 				//遍历子树展开需要展开的节点
 				_buffer = [ node ];
-				debugger;
 				while ( _buffer.length !== 0 ) {
 					var c = _buffer[ 0 ].getChildren();
 					if ( _buffer[ 0 ].isExpanded() && c.length !== 0 ) {
+						//_buffer[ 0 ].getLayout().shicon.switchState( true );
 						for ( var x = 0; x < c.length; x++ ) {
 							minder.appendChildNode( _buffer[ 0 ], c[ x ] );
 						}
@@ -704,6 +704,8 @@ KityMinder.registerModule( "LayoutDefault", function () {
 			if ( focus ) {
 				showNodeInView( node );
 			}
+			var shicon = parent.getLayout().shicon;
+			if ( shicon ) shicon.switchState( true );
 		},
 		appendSiblingNode: function ( sibling, node, focus ) {
 			var parent = sibling.getParent();
