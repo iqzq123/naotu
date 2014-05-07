@@ -23,7 +23,7 @@ Minder.Receiver = kity.createClass( 'Receiver', {
         _div.className = 'km_receiver';
         this.container = document.body.insertBefore( _div, document.body.firstChild );
         utils.addCssRule( 'km_receiver_css', ' .km_receiver{position:absolute;padding:0;margin:0;word-wrap:break-word;clip:rect(1em 1em 1em 1em);}' ); //
-        this.km.on( 'textedit.beforekeyup textedit.keydown textedit.paste', utils.proxy( this.keyboardEvents, this ) );
+        this.km.on( 'textedit.beforekeyup textedit.keydown textedit.keypress textedit.paste', utils.proxy( this.keyboardEvents, this ) );
         this.timer = null;
         this.index = 0;
     },
@@ -90,13 +90,17 @@ Minder.Receiver = kity.createClass( 'Receiver', {
             me.setContainerStyle();
             me.minderNode.setText( text );
             if ( text.length == 0 ) {
-                me.textShape.setContent( 'a' );
-                me.textShape.setOpacity( 0 );
+
+                me.minderNode.setText( 'a' );
+
             }
             me.km.updateLayout( me.minderNode );
 
 
             me.textShape = me.minderNode.getTextShape();
+            if ( text.length == 0 ) {
+                me.textShape.setOpacity( 0 );
+            }
             me.setBaseOffset();
             me.updateTextData();
 
@@ -107,9 +111,13 @@ Minder.Receiver = kity.createClass( 'Receiver', {
                 me.selection.setShow()
             }, 500 );
         }
+        var isTypeText = false;
+        var isKeypress = false;
         switch ( e.type ) {
 
         case 'keydown':
+            isTypeText = false;
+            isKeypress = false;
             switch ( e.originEvent.keyCode ) {
             case keys.Enter:
             case keys.Tab:
@@ -118,7 +126,13 @@ Minder.Receiver = kity.createClass( 'Receiver', {
                 this.km.fire( 'contentchange' );
                 this.km.setStatus( 'normal' );
                 e.preventDefault();
+                return;
                 break;
+            case keymap.Shift:
+            case keymap.Control:
+            case keymap.Alt:
+            case keymap.Cmd:
+                return;
             }
 
             if ( e.originEvent.ctrlKey || e.originEvent.metaKey ) {
@@ -143,13 +157,25 @@ Minder.Receiver = kity.createClass( 'Receiver', {
                 }
                 return;
             }
+            isTypeText = true;
+
             break;
+
+
+
+        case 'keypress':
+            if ( isTypeText )
+                setTextToContainer();
+            isKeypress = true;
+            break;
+
         case 'beforekeyup':
 
 
             switch ( keyCode ) {
             case keymap.Enter:
             case keymap.Tab:
+            case keymap.F2:
                 if ( this.keydownNode === this.minderNode ) {
                     this.rollbackStatus();
                     this.setTextEditStatus( false );
@@ -157,15 +183,13 @@ Minder.Receiver = kity.createClass( 'Receiver', {
                 }
                 e.preventDefault();
                 return;
-            case keymap.Shift:
-            case keymap.Control:
-            case keymap.Alt:
-            case keymap.Cmd:
-                return;
+
 
             }
 
-            setTextToContainer();
+            if ( !isKeypress ) {
+                setTextToContainer();
+            }
             return true;
         }
 
@@ -203,17 +227,22 @@ Minder.Receiver = kity.createClass( 'Receiver', {
         }
         return this;
     },
-    getBaseOffset: function () {
-        return this.textShape.getRenderBox( 'top' );
+    getBaseOffset: function (  ) {
+        var rb = this.textShape.getRenderBox( this.km.getRenderContainer() );
+//        if(!this.pr) {
+//            this.km.getRenderContainer().addShape(this.pr = new kity.Rect().stroke('green'));
+//        }
+//        this.pr.setSize(rb.width, rb.height).setPosition(rb.x, rb.y);
+        return rb;
     },
     setBaseOffset: function () {
-        this.offset = this.textShape.getRenderBox( 'top' );
+        this.offset = this.textShape.getRenderBox( this.km.getRenderContainer() );
         return this;
     },
     setContainerStyle: function () {
-        var textShapeBox = this.textShape.getRenderBox();
+        var textShapeBox = this.getBaseOffset();
 
-        this.container.style.cssText = ";left:" + this.offset.x + 'px;top:' + ( this.offset.y + textShapeBox.height ) + 'px;width:' + textShapeBox.width + 'px;height:' + textShapeBox.height + 'px;';
+        this.container.style.cssText = ";left:" + textShapeBox.x + 'px;top:' + ( textShapeBox.y - 5 ) + 'px;width:' + textShapeBox.width + 'px;height:' + textShapeBox.height + 'px;';
         return this;
     },
     getTextOffsetData: function () {

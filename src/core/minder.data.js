@@ -17,7 +17,7 @@ Utils.extend( KityMinder, {
 } );
 
 // 这里的 Json 是一个对象
-function exportNode( node ) {
+function exportNode(node) {
     var exported = {};
     exported.data = node.getData();
     var childNodes = node.getChildren();
@@ -41,7 +41,7 @@ function importNode( node, json, km ) {
     for ( var field in data ) {
         node.setData( field, data[ field ] );
     }
-    node.setData( 'text',data.text || km.getLang( DEFAULT_TEXT[ node.getType() ] ) );
+    node.setData( 'text', data.text || km.getLang( DEFAULT_TEXT[ node.getType() ] ) );
 
     var childrenTreeData = json.children;
     if ( !childrenTreeData ) return;
@@ -53,7 +53,6 @@ function importNode( node, json, km ) {
     return node;
 }
 
-
 // 导入导出
 kity.extendClass( Minder, {
     exportData: function ( protocalName ) {
@@ -62,11 +61,11 @@ kity.extendClass( Minder, {
         json = exportNode( this.getRoot() );
         protocal = KityMinder.findProtocal( protocalName );
 
-        if(this._fire( new MinderEvent( 'beforeexport',  {
-            json:json,
+        if ( this._fire( new MinderEvent( 'beforeexport', {
+            json: json,
             protocalName: protocalName,
             protocal: protocal
-        },true ) ) === true) return;
+        }, true ) ) === true ) return;
 
         if ( protocal ) {
             return protocal.encode( json, this );
@@ -105,6 +104,10 @@ kity.extendClass( Minder, {
         if ( stoped ) return this;
 
         json = params.json || ( params.json = protocal.decode( local ) );
+
+        this._fire(new MinderEvent('importData',{
+            data:json
+        },true));
 
         if ( typeof json === 'object' && 'then' in json ) {
             var self = this;

@@ -21,11 +21,10 @@ var MoveToParentCommand = kity.createClass( 'MoveToParentCommand', {
 		for ( var i = nodes.length - 1; i >= 0; i-- ) {
 			node = nodes[ i ];
 			if ( node.getParent() ) {
-				node.getParent().removeChild( node );
-				parent.appendChild( node );
+				minder.removeNode( [ node ] );
+				minder.appendChildNode( parent, node );
 			}
 		}
-		minder.initStyle( minder.getRoot() );
 		minder.select( nodes, true );
 	}
 } );
@@ -128,6 +127,7 @@ var DragBox = kity.createClass( "DragBox", {
 		this.remove();
 		this._dragMode = false;
 		this._dropSucceedTarget = null;
+		this._removeDropHint();
 	},
 	_drawForDragMode: function () {
 		this._text.setContent( this._dragSources.length + ' items' );
@@ -192,6 +192,13 @@ var DragBox = kity.createClass( "DragBox", {
 		this._lastSucceedTarget = target;
 	},
 
+	_removeDropHint: function () {
+		var lastTarget = this._lastSucceedTarget;
+		if ( lastTarget ) {
+			this._removeDropStyle( lastTarget );
+		}
+	},
+
 	_removeDropStyle: function ( node ) {
 		node._layout.bgRect.stroke( 'none' );
 		this._rect.stroke( '#3399ff', 1 );
@@ -228,7 +235,7 @@ var DragBox = kity.createClass( "DragBox", {
 
 		var movement = kity.Vector.fromPoints( this._startPosition, this._dragPosition );
 
-		this.setTransform( new kity.Matrix().translate( movement.x, movement.y ) );
+		this.setTranslate( movement );
 
 		this._dropTest();
 		this._updateDropHint();

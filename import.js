@@ -18,6 +18,7 @@
             ,'core/keymap.js'
             ,'core/minder.lang.js'
             ,'core/minder.defaultoptions.js'
+            ,'core/minder.preference.js'
             ,'core/browser.js'
             ,'module/geometry.js'
             ,'module/history.js'
@@ -41,6 +42,7 @@
             ,'module/zoom.js'
             ,'module/nodetext.js'
             ,'module/hyperlink.js'
+            ,'module/expand.js'
             ,'ui/jquery-ui-1.10.4.custom.min.js'
             ,'ui/widget.js'
             ,'ui/button.js'
@@ -70,6 +72,7 @@
             ,'adapter/node.js'
             ,'adapter/contextmenu.js'
             ,'adapter/dialog.js'
+            ,'adapter/hyperlink.js'
             ,'protocal/xmind.js'
             ,'protocal/freemind.js'
             ,'protocal/mindmanager.js'
@@ -77,6 +80,7 @@
             ,'protocal/json.js'
             ,'protocal/png.js'
             ,'protocal/svg.js'
+
         ),
         baseURL = 'src/';
     for (var i=0,pi;pi = paths[i++];) {

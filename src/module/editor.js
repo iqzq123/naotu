@@ -20,12 +20,13 @@ KityMinder.registerModule( "TextEditModule", function () {
 
     var selectionByClick = false;
 
+
     return {
-        //插入光标
-        "init":function(){
-            this.getPaper().addShape(sel);
-        },
         "events": {
+            //插入光标
+            "afterinitstyle":function(){
+                this.getRenderContainer().addShape(sel);
+            },
             'normal.beforemousedown textedit.beforemousedown':function(e){
                 if(e.isRightMB()){
                     e.stopPropagationImmediately();
@@ -49,6 +50,7 @@ KityMinder.registerModule( "TextEditModule", function () {
                     textShape.setStyle('cursor','default');
 
                     if ( this.isSingleSelect() && node.isSelected()) {// && e.kityEvent.targetShape.getType().toLowerCase()== 'text'
+
                         sel.collapse();
                         node.getTextShape().setStyle('cursor','text');
                         km.setStatus('textedit');
@@ -74,7 +76,53 @@ KityMinder.registerModule( "TextEditModule", function () {
                     }
                 }
             },
+            //当输入键值是内容时，进入textedit状态
+            'normal.beforekeydown':function(e){
+                var node = this.getSelectedNode();
+                if(node){
+                    if ( this.isSingleSelect() && node.isSelected()) {
+                        var keyCode = e.originEvent.keyCode;
+                        if(!keymap.notContentInput[keyCode] && range.nativeSel.rangeCount != 0){
+                            var nativeRange = range.nativeSel.getRangeAt(0);
+                            if(nativeRange && (nativeRange.startContainer === receiver.container || receiver.container.contains(nativeRange.startContainer )))
+                                km.setStatus('textedit')
+                        }
+                    }
+                }
+            },
+            //当节点选区通过键盘发生变化时，输入状态要准备好
+            'normal.keyup':function(e){
+                var node = this.getSelectedNode();
+                if(node){
+                    if ( this.isSingleSelect() && node.isSelected()) {
+                        var keyCode = e.originEvent.keyCode;
+                        if(keymap.isSelectedNodeKey[keyCode] && km.getStatus() != 'textedit'){
+                           //准备输入状态
+                            var textShape = node.getTextShape();
+
+                            sel.setHide();
+                            sel.setStartOffset(0);
+                            sel.setEndOffset(textShape.getContent().length);
+
+                            receiver.setTextEditStatus(true)
+                                .setSelection(sel)
+                                .setKityMinder(this)
+                                .setMinderNode(node)
+                                .setTextShape(textShape)
+                                .setRange(range)
+                                .setBaseOffset()
+                                .setContainerStyle()
+                                .setSelectionHeight()
+                                .setContainerTxt(textShape.getContent())
+                                .updateRange(range).setTextEditStatus(true);
+
+                            sel.setData('relatedNode',node);
+                        }
+                    }
+                }
+            },
             'normal.mouseup textedit.mouseup':function(e){
+
                 if(mouseDownStatus){
                     if(!sel.collapsed ){
                         try{
@@ -85,7 +133,36 @@ KityMinder.registerModule( "TextEditModule", function () {
 
                     }else
                        sel.setShow()
+                }else{
+                    //当选中节点后，输入状态准备
+                    var node = e.getTargetNode();
+                    if(node){
+                        if ( this.isSingleSelect() && node.isSelected()) {
+                            //准备输入状态
+                            var textShape = node.getTextShape();
+
+                            sel.setHide();
+                            sel.setStartOffset(0);
+                            sel.setEndOffset(textShape.getContent().length);
+
+                            receiver.setTextEditStatus(true)
+                                .setSelection(sel)
+                                .setKityMinder(this)
+                                .setMinderNode(node)
+                                .setTextShape(textShape)
+                                .setRange(range)
+                                .setBaseOffset()
+                                .setContainerStyle()
+                                .setSelectionHeight()
+                                .setContainerTxt(textShape.getContent())
+                                .updateRange(range).setTextEditStatus(true);
+
+                            sel.setData('relatedNode',node);
+
+                        }
+                    }
                 }
+
 
                 mouseDownStatus = false;
                 oneTime = 0;
@@ -96,7 +173,8 @@ KityMinder.registerModule( "TextEditModule", function () {
 
                     var offset = e.getPosition();
 
-                    if(Math.abs(offset.y - lastEvtPosition.y) > 2 && Math.abs(lastEvtPosition.x - offset.x) < 1 ){
+                    if(Math.abs(offset.y - lastEvtPosition.y) >= 1 && Math.abs(lastEvtPosition.x - offset.x) <= 1 ){
+
                         sel.setHide();
                         mouseDownStatus = false;
                         return;
@@ -133,45 +211,46 @@ KityMinder.registerModule( "TextEditModule", function () {
             "resize": function ( e ) {
                 sel.setHide();
             },
-            'execCommand':function(e){
-                var cmds = {
-                    'appendchildnode':1,
-                    'appendsiblingnode':1
-                };
-                if(cmds[e.commandName]){
-
-                    var node = km.getSelectedNode();
-                    if( !node ){
-                        return;
-                    }
-
-                    var textShape = node.getTextShape();
-
-                    textShape.setStyle('cursor','default');
-                    node.getTextShape().setStyle('cursor','text');
-                    km.setStatus('textedit');
-                    receiver.setTextEditStatus(true)
-                        .setSelection(sel)
-                        .setKityMinder(this)
-                        .setMinderNode(node)
-                        .setTextShape(textShape)
-                        .setBaseOffset()
-                        .setContainerStyle()
-                        .setSelectionHeight()
-                        .getTextOffsetData()
-                        .setIndex(0)
-                        .updateSelection()
-                        .setRange(range);
-
-                    sel.setStartOffset(0);
-                    sel.setEndOffset(textShape.getContent().length);
-                    sel.setShow();
-
-                    receiver.updateSelectionShow(1)
-                        .updateRange(range);
-                    return;
-
-                }
+            "execCommand": function( e ) {
+//                var cmds = {
+//                    'appendchildnode' : 1,
+//                    'appendsiblingnode' : 1,
+//                    'editnode' : 1
+//                };
+//                if ( cmds[ e.commandName ] ){
+//
+//                    var node = km.getSelectedNode();
+//                    if( !node ){
+//                        return;
+//                    }
+//
+//                    var textShape = node.getTextShape();
+//
+//                    textShape.setStyle('cursor','default');
+//                    node.getTextShape().setStyle('cursor','text');
+//                    km.setStatus('textedit');
+//                    receiver.setTextEditStatus(true)
+//                        .setSelection(sel)
+//                        .setKityMinder(this)
+//                        .setMinderNode(node)
+//                        .setTextShape(textShape)
+//                        .setBaseOffset()
+//                        .setContainerStyle()
+//                        .setSelectionHeight()
+//                        .getTextOffsetData()
+//                        .setIndex(0)
+//                        .updateSelection()
+//                        .setRange(range);
+//
+//                    sel.setStartOffset(0);
+//                    sel.setEndOffset(textShape.getContent().length);
+//                    sel.setShow();
+//
+//                    receiver.updateSelectionShow(1)
+//                        .updateRange(range);
+//                    return;
+//
+//                }
 
                 if((e.commandName == 'priority' || e.commandName == 'progress') && this.getStatus() == 'textedit' ){
 
@@ -198,6 +277,9 @@ KityMinder.registerModule( "TextEditModule", function () {
             },
             blur:function(){
                 receiver.clear()
+            },
+            'textedit.mousewheel':function(){
+                receiver.setContainerStyle()
             }
         }
     };

@@ -4,7 +4,7 @@ Minder.Selection = kity.createClass( 'Selection', {
     constructor: function ( height, color, width ) {
         this.callBase();
         this.height = height || 20;
-
+        this.setAttr('id','_kity_selection');
         this.stroke( color || 'rgb(27,171,255)', width || 1 );
         this.width = 0;
         this.fill('rgb(27,171,255)');
@@ -22,7 +22,7 @@ Minder.Selection = kity.createClass( 'Selection', {
         this.width = 1;
         this.collapsed = true;
         if(toEnd){
-            this.startOffset = this.endOffset
+            this.startOffset = this.endOffset;
         }else{
             this.endOffset = this.startOffset;
         }

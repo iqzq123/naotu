@@ -1,4 +1,10 @@
 KityMinder.registerModule( "LayoutModule", function () {
+	var me = this;
+	var clearPaper = function () {
+		me._rc.remove();
+		me._rc = new kity.Group();
+		me._paper.addShape( this._rc );
+	};
 	kity.extendClass( Minder, {
 		addLayoutStyle: function ( name, style ) {
 			if ( !this._layoutStyles ) this._layoutStyles = {};
@@ -34,9 +40,8 @@ KityMinder.registerModule( "LayoutModule", function () {
 		},
 		initStyle: function () {
 			var curStyle = this.getCurrentStyle();
-			var lastTransform = this._rc.getTransform();
 			this._rc.remove();
-			this._rc = new kity.Group().setTransform( lastTransform );
+			this._rc = new kity.Group();
 			this._paper.addShape( this._rc );
 
 			var _root = this.getRoot();
@@ -44,6 +49,12 @@ KityMinder.registerModule( "LayoutModule", function () {
 				n.clearLayout();
 			} );
 			this.getLayoutStyle( curStyle ).initStyle.call( this );
+			this.fire( 'afterinitstyle' );
+		},
+		restoreStyle: function () {
+			var curStyle = this.getCurrentStyle();
+			clearPaper();
+			var _root = this.getRoot();
 		},
 		appendChildNode: function ( parent, node, focus, index ) {
 			var curStyle = this.getCurrentStyle();
@@ -115,8 +126,7 @@ KityMinder.registerModule( "LayoutModule", function () {
 				if ( !parent ) {
 					return null;
 				}
-
-				if ( parent.getType() !== "root" && parent.getChildren().length !== 0 && parent.getData( "expand" ) === false ) {
+				if ( parent.getType() !== "root" && parent.getChildren().length !== 0 && !parent.isExpanded() ) {
 					km.expandNode( parent );
 				}
 
@@ -196,18 +206,43 @@ KityMinder.registerModule( "LayoutModule", function () {
 			}
 		};
 	} )() );
+	var EditNodeCommand = kity.createClass( "EditNodeCommand", ( function () {
+		return {
+			base: Command,
+			execute: function ( km ) {
+				var selectedNode = km.getSelectedNode();
+				if ( !selectedNode ) {
+					return null;
+				}
+				km.select( selectedNode, true );
+			},
+			queryState: function ( km ) {
+				var selectedNode = km.getSelectedNode();
+				if ( !selectedNode ) {
+					return -1;
+				} else {
+					return 0;
+				}
+			},
+			isNeedUndo: function () {
+				return false;
+			}
+		};
+	} )() );
 
 	return {
 		"commands": {
 			"appendchildnode": AppendChildNodeCommand,
 			"appendsiblingnode": AppendSiblingNodeCommand,
 			"removenode": RemoveNodeCommand,
+			"editnode": EditNodeCommand,
 			"switchlayout": SwitchLayoutCommand
 		},
 		"events": {
 			"ready": function () {
 				this.setDefaultOptions( 'layoutstyle', this.getLayoutStyleItems() );
 				switchLayout( this, this.getOptions( 'defaultlayoutstyle' ) );
+
 			},
 			"click": function ( e ) {
 				var ico = e.kityEvent.targetShape && e.kityEvent.targetShape.container;
@@ -222,7 +257,12 @@ KityMinder.registerModule( "LayoutModule", function () {
 				}.bind( this ), 100 );
 			},
 			"import": function ( e ) {
-				this.initStyle( this.getRoot() );
+				this.initStyle();
+			},
+			"cloneNode": function ( e ) {
+				var target = e.targetNode;
+				var source = e.sourceNode;
+				target._layout = utils.extend( {}, source._layout );
 			}
 		},
 		'contextmenu': [ {
@@ -238,6 +278,12 @@ KityMinder.registerModule( "LayoutModule", function () {
 				},
 				cmdName: 'appendchildnode'
 			}, {
+				label: this.getLang( 'node.editnode' ),
+				exec: function () {
+					this.execCommand( 'editnode', null );
+				},
+				cmdName: 'editnode'
+			}, {
 				label: this.getLang( 'node.removenode' ),
 				cmdName: 'removenode'
 			}, {
@@ -250,7 +296,12 @@ KityMinder.registerModule( "LayoutModule", function () {
 			"node": {
 				'appendsiblingnode': 'appendsiblingnode',
 				'appendchildnode': 'appendchildnode',
+				'editnode': 'editnode',
 				'removenode': 'removenode'
+			},
+			'defaultExpand': {
+				'defaultLayer': 0,
+				'defaultSubShow': 0
 			}
 		}
 	};
