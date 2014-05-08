@@ -57,6 +57,7 @@ module.exports = function ( grunt ) {
                 dest: distPath + 'kityminder.all.js'
             }
         },
+
         uglify: {
             minimize: {
                 options: {
@@ -70,6 +71,7 @@ module.exports = function ( grunt ) {
                 } )()
             }
         },
+
         copy: {
             dir: {
                 files: [ {
@@ -78,6 +80,7 @@ module.exports = function ( grunt ) {
                 } ]
             }
         },
+
         replace: {
             online: {
                 src: distPath + 'index.html',
@@ -93,6 +96,7 @@ module.exports = function ( grunt ) {
         livereload: {
             port: 35729 // Default livereload listening port.
         },
+
         connect: {
             livereload: {
                 options: {
@@ -109,6 +113,7 @@ module.exports = function ( grunt ) {
                 }
             }
         },
+        
         regarde: {
             js: {
                 files: 'src/**/*.js',

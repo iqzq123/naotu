@@ -66,7 +66,7 @@
             'hand zoom-in zoom-out expand contract| saveto'
         ]
         //只读模式，默认是false
-        //readOnly: true
+        ,readOnly: true
 
         //设置主题
         //,defaultlayoutstyle : 'default' //设置默认的主题
@@ -79,7 +79,7 @@
         //,lang:'zh-cn'
 
         //设置km整体的z-index大小
-        //,zIndex : 1000
+        ,zIndex : 10
         //设置初始加载时展开的层数和子节点数目阈值
         //默认是全部展开，0表示全部展开
         ,

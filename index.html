@@ -26,58 +26,54 @@
 </style>
 <body>
     <div class="files">
-        <a class="file" data-extension="xmind" data-url="https://c.pcs.baidu.com/rest/2.0/pcs/file?path=%2Fapps%2Fkityminder%2F%E7%99%BE%E5%BA%A6xmind-%E7%BD%91%E7%9B%98.xmind&access_token=52.a168cdef7648c17628a0695e40771fd7.2592000.1401277148.2936331757-2246711&method=download" href="javascript:;">XMind 格式</a>
+        <a class="file" data-type="xmind" data-url="https://c.pcs.baidu.com/rest/2.0/pcs/file?path=%2Fapps%2Fkityminder%2F%E7%99%BE%E5%BA%A6xmind-%E7%BD%91%E7%9B%98.xmind&access_token=52.a168cdef7648c17628a0695e40771fd7.2592000.1401277148.2936331757-2246711&method=download" href="javascript:;">XMind 格式</a>
         &nbsp;&nbsp;&nbsp;&nbsp;
-        <a class="file" data-extension="km" data-url="https://c.pcs.baidu.com/rest/2.0/pcs/file?path=%2Fapps%2Fkityminder%2Fkm%E6%A0%BC%E5%BC%8F-%E7%BD%91%E7%9B%98.km&access_token=52.cadcb9ad33b982654c2d0cd641b33b54.2592000.1401332814.2936331757-2246711&method=download" href="javascript:;">KM 格式</a>
+        <a class="file" data-type="km" data-url="https://c.pcs.baidu.com/rest/2.0/pcs/file?path=%2Fapps%2Fkityminder%2Fkm%E6%A0%BC%E5%BC%8F-%E7%BD%91%E7%9B%98.km&access_token=52.cadcb9ad33b982654c2d0cd641b33b54.2592000.1401332814.2936331757-2246711&method=download" href="javascript:;">KM 格式</a>
     </div>
 
-    <div id="minder-container">
-        
+    <!--Dialog 模板-->
+    <div class="km-dialog">
+        <a class="close">X</a>
+        <div class="loading">
+            <div class="loading-progress">0%</div>
+        </div>
+        <div id="kity-minder"></div>
     </div>
 </body>
 <script>
-    // create km instance
 
-    function getContainerId(id){
-        if( $('#'+id).length == 0 ){
-            var container = $('<div id="' + id + '" class="container" onselectstart="return false"><div class="mask"></div><img class="loading" src="pan/loading.gif" /><div class="close">X</div></div>').prependTo(document.body);
+    var $dialog = $('.km-dialog').hide(),
+        $close = $dialog.find('.close')
+        $loading = $dialog.find('.loading').hide(),
+        $loadingProgress = $loading.find('.loading-progress');
 
-            $('.close', container).click(function(){
-                container.hide();
-            });
-
-            container.hide();
-        }
-
-        return id;
-    }
-
-    function enableLoading(container){
-        $('.loading, .mask', container).show();
-    }
-
-    function disableLoading(container){
-        $('.loading, .mask', container).hide();
-    }
+    $close.click(function() {
+        $dialog.hide();
+    });
 
     $('.files').delegate('.file', 'click', function(){
         var url = $(this).attr('data-url');
-        var extension = $(this).attr('data-extension');
+        var type = $(this).data('type');
 
-        var id = getContainerId('minder');
-        var container = $('#'+id).show();
+        $dialog.show();
+        $loading.show();
+        $loadingProgress.text('正在加载...');
 
-        enableLoading(container);
-
-        var minder = KM.renderByUrl(id, url, extension, function(minder){
-            disableLoading(container);
-        });
-
-        minder.on('renderprogress', function() {
-            
+        KityMinder.load({
+            url: $(this).data('url'),
+            type: $(this).data('type'),
+            target: 'kity-minder',
+            success: function() {
+                $loading.hide();
+            },
+            progress: function(percent) {
+                $loadingProgress.text('正在加载（' + percent.toFixed(2) + '%）...')
+            },
+            error: function(message) {
+                $loadingProgress.text('加载失败：' + message);
+            }
         });
     });
-    
-    getContainerId('minder');
+
 </script>
 </html>
