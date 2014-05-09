@@ -102,12 +102,7 @@ kity.extendClass( Minder, {
         // 是否需要阻止导入
         var stoped = this._fire( new MinderEvent( 'beforeimport', params, true ) );
         if ( stoped ) return this;
-
         json = params.json || ( params.json = protocal.decode( local ) );
-
-        this._fire(new MinderEvent('importData',{
-            data:json
-        },true));
 
         if ( typeof json === 'object' && 'then' in json ) {
             var self = this;
@@ -131,7 +126,7 @@ kity.extendClass( Minder, {
         this._root.setData();
         this._root.setData( "currentstyle", curLayout );
         importNode( this._root, json, this );
-
+        this.fire( 'beforeimport' );
         this._fire( new MinderEvent( 'import', params, false ) );
         this._firePharse( {
             type: 'contentchange'

@@ -75,9 +75,26 @@ module.exports = function ( grunt ) {
         copy: {
             dir: {
                 files: [ {
-                    src: [ 'dialogs/**', 'lang/**', 'lib/**', 'social/**', 'themes/**' ],
+                    src: [ 'dialogs/**', 'lang/**', 'lib/**', 'social/**', 'themes/**', 'index.html' ],
                     dest: distPath
-                } ]
+                }]
+            },
+            kity: {
+                expand: true,
+                cwd: 'kity/dist/',
+                src: '**',
+                dest: distPath + 'lib/'
+            },
+            km_config: {
+                expand: true,
+                src: 'kityminder.config.js',
+                dest: distPath
+            },
+            mise: {
+                files: [{
+                    src: ['LICENSE', 'favicon.ico', 'README.md'],
+                    dest: distPath
+                }]
             }
         },
 
@@ -86,8 +103,20 @@ module.exports = function ( grunt ) {
                 src: distPath + 'index.html',
                 overwrite: true,
                 replacements: [ {
-                    from: /1234567890/ig,
-                    to: '1234567890'
+                    from: /kity\/dist\/kitygraph\.all\.js/ig,
+                    to: 'lib/kitygraph.all.min.js'
+                }, {
+                    from: /import\.js/,
+                    to: 'kityminder.all.min.js'
+                } ]
+            },
+
+            noCache: {
+                src: distPath + 'index.html',
+                overwrite: true,
+                replacements: [ {
+                    from: /src=\"(.+?)\.js\"/ig,
+                    to: 'src="$1.js?_=' + +new Date() + '"'
                 } ]
             }
         },

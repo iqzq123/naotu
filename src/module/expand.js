@@ -1,9 +1,99 @@
 KityMinder.registerModule( "Expand", function () {
+	var minder = this;
 	var EXPAND_STATE_DATA = 'expandState',
 		STATE_EXPAND = 'expand',
 		STATE_COLLAPSE = 'collapse';
 
+	var layerTravel = function ( root, fn ) {
+		var _buffer = [ root ];
+		while ( _buffer.length !== 0 ) {
+			fn( _buffer[ 0 ] );
+			_buffer = _buffer.concat( _buffer[ 0 ].getChildren() );
+			_buffer.shift();
+		}
+	}
+	//获取选中的最上层节点
+	var filterDuplicate = function ( nodes ) {
+		var _buffer = ( [] ).concat( nodes );
+		var resultSet = [];
+		for ( var i = 0; i < _buffer.length; i++ ) {
+			var parent = _buffer[ i ].getParent();
+			if ( !parent ) {
+				resultSet = [ _buffer[ i ] ];
+				break;
+			} else {
+				//筛选
+				while ( parent ) {
+					if ( _buffer.indexOf( parent ) !== -1 ) {
+						_buffer[ i ] = null;
+						break;
+					}
+					parent = parent.getParent();
+				}
+				if ( _buffer[ i ] ) resultSet.push( _buffer[ i ] );
+			}
+		}
+		return resultSet;
+	}
 
+	var expandAll = function ( km, deal ) {
+		var selectedNodes = km.getSelectedNodes();
+		var topNodes = filterDuplicate( selectedNodes );
+		if ( selectedNodes.length === 0 || selectedNodes[ 0 ].getType() === 'root' || topNodes[ 0 ].getType() === 'root' ) {
+			layerTravel( km.getRoot(), function ( n ) {
+				if ( deal === 'expand' ) n.expand();
+				else n.collapse();
+			} );
+			km.initStyle();
+		} else {
+			for ( var i = 0; i < topNodes.length; i++ ) {
+				var node = topNodes[ i ];
+				var children = node.getChildren();
+				if ( children.length === 0 ) {
+					continue;
+				} else {
+					layerTravel( node, function ( n ) {
+						if ( n !== node ) {
+							if ( deal === 'expand' ) n.expand();
+							else n.collapse();
+						}
+					} );
+					var judge_val;
+					if ( deal === 'expand' ) {
+						judge_val = !node.isExpanded();
+					} else {
+						judge_val = node.isExpanded();
+					}
+					if ( judge_val ) {
+						km.expandNode( node );
+					} else {
+						km.expandNode( node );
+						km.expandNode( node );
+					}
+				}
+			}
+		}
+		for ( var j = 0; j < selectedNodes.length; j++ ) {
+			km.highlightNode( selectedNodes[ j ] );
+		}
+	}
+
+	// var setOptionValue = function ( root, layer, sub ) {
+	// 	var cur_layer = 1;
+	// 	var _buffer = root.getChildren();
+	// 	while ( cur_layer < layer ) {
+	// 		var layer_len = _buffer.length;
+	// 		for ( var i = 0; i < layer_len; i++ ) {
+	// 			var c = _buffer[ i ].getChildren();
+	// 			if ( c.length < sub || ( !sub ) ) {
+	// 				_buffer[ i ].expand();
+	// 				_buffer = _buffer.concat( c );
+	// 			}
+	// 		}
+	// 		_buffer.splice( 0, layer_len );
+	// 		cur_layer++;
+	// 	}
+	// }
 	/**
 	 * 该函数返回一个策略，表示递归到节点指定的层数
 	 *
@@ -13,38 +103,38 @@ KityMinder.registerModule( "Expand", function () {
 	 * @param {int} deep_level 指定的层数
 	 * @param {Function} policy_after_level 超过的层数执行的策略
 	 */
-	function generateDeepPolicy( deep_level, policy_after_level ) {
+		function generateDeepPolicy( deep_level, policy_after_level ) {
 
-		return function ( node, state, policy, level ) {
-			var children, child, i;
+			return function ( node, state, policy, level ) {
+				var children, child, i;
 
-			node.setData( EXPAND_STATE_DATA, state );
-			level = level || 1;
+				node.setData( EXPAND_STATE_DATA, state );
+				level = level || 1;
 
-			children = node.getChildren();
+				children = node.getChildren();
 
-			for ( i = 0; i < children.length; i++ ) {
-				child = children[ i ];
+				for ( i = 0; i < children.length; i++ ) {
+					child = children[ i ];
 
-				if ( level <= deep_level ) {
-					policy( child, state, policy, level + 1 );
-				} else if ( policy_after_level ) {
-					policy_after_level( child, state, policy, level + 1 );
+					if ( level <= deep_level ) {
+						policy( child, state, policy, level + 1 );
+					} else if ( policy_after_level ) {
+						policy_after_level( child, state, policy, level + 1 );
+					}
 				}
-			}
 
-		};
-	}
+			};
+		}
 
-	/**
-	 * 节点展开和收缩的策略常量
-	 *
-	 * 策略是一个处理函数，处理函数接受 3 个参数：
-	 *
-	 * @param {MinderNode} node   要处理的节点
-	 * @param {Enum}       state  取值为 "expand" | "collapse"，表示要对节点进行的操作是展开还是收缩
-	 * @param {Function}   policy 提供当前策略的函数，方便递归调用
-	 */
+		/**
+		 * 节点展开和收缩的策略常量
+		 *
+		 * 策略是一个处理函数，处理函数接受 3 个参数：
+		 *
+		 * @param {MinderNode} node   要处理的节点
+		 * @param {Enum}       state  取值为 "expand" | "collapse"，表示要对节点进行的操作是展开还是收缩
+		 * @param {Function}   policy 提供当前策略的函数，方便递归调用
+		 */
 	var EXPAND_POLICY = MinderNode.EXPAND_POLICY = {
 
 		/**
@@ -97,22 +187,22 @@ KityMinder.registerModule( "Expand", function () {
 			return this.getData( EXPAND_STATE_DATA ) === STATE_EXPAND;
 		}
 	} );
-	var ExpandAllNodeCommand = kity.createClass( "ExpandAllNodeCommand", ( function () {
+	var ExpandNodeCommand = kity.createClass( "ExpandNodeCommand", ( function () {
 		return {
 			base: Command,
 			execute: function ( km ) {
-				alert( '2' );
+				expandAll( km, 'expand' );
 			},
 			queryState: function ( km ) {
 				return 0;
 			}
 		};
 	} )() );
-	var CollapseAllNodeCommand = kity.createClass( "ExpandAllNodeCommand", ( function () {
+	var CollapseNodeCommand = kity.createClass( "CollapseNodeCommand", ( function () {
 		return {
 			base: Command,
 			execute: function ( km ) {
-				alert( '1' );
+				expandAll( km, 'collapse' );
 			},
 			queryState: function ( km ) {
 				return 0;
@@ -121,13 +211,21 @@ KityMinder.registerModule( "Expand", function () {
 	} )() );
 	return {
 		'events': {
-			'import': function ( e ) {
-				//console.log( this.getRoot() );
+			'beforeimport': function ( e ) {
+				// var _root = this.getRoot();
+				// var options = this.getOptions();
+				// var defaultExpand = options.defaultExpand;
+				//setOptionValue( _root, defaultExpand.defaultLayer, defaultExpand.defaultSubShow );
 			}
 		},
+		'addShortcutKeys': {
+			"ExpandNode": "ctrl+/", //expand
+			"CollapseNode": "ctrl+." //collapse
+		},
 		'commands': {
-			'expand': ExpandAllNodeCommand,
-			'contract': CollapseAllNodeCommand
+			'ExpandNode': ExpandNodeCommand,
+			'CollapseNode': CollapseNodeCommand
 		}
+
 	};
 } );

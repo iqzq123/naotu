@@ -16,12 +16,18 @@ Minder.Receiver = kity.createClass( 'Receiver', {
         return this.textEditStatus;
     },
     constructor: function ( km ) {
+        var me = this;
         this.setKityMinder( km );
         this.textEditStatus = false;
         var _div = document.createElement( 'div' );
         _div.setAttribute( 'contenteditable', true );
         _div.className = 'km_receiver';
         this.container = document.body.insertBefore( _div, document.body.firstChild );
+        if ( browser.ie && browser.version == 11 ) {
+            utils.listen( this.container, 'keydown keypress keyup', function ( e ) {
+                me.keyboardEvents.call( me, new MinderEvent( e.type == 'keyup' ? "beforekeyup" : e.type, e ) )
+            } )
+        }
         utils.addCssRule( 'km_receiver_css', ' .km_receiver{position:absolute;padding:0;margin:0;word-wrap:break-word;clip:rect(1em 1em 1em 1em);}' ); //
         this.km.on( 'textedit.beforekeyup textedit.keydown textedit.keypress textedit.paste', utils.proxy( this.keyboardEvents, this ) );
         this.timer = null;
@@ -46,7 +52,7 @@ Minder.Receiver = kity.createClass( 'Receiver', {
             textShape = new kity.Text();
         }
         this.textShape = textShape;
-        this.container.innerHTML = textShape.getContent();
+        this.container.innerHTML = utils.unhtml( textShape.getContent() );
         return this;
     },
     setTextShapeSize: function ( size ) {
@@ -77,6 +83,9 @@ Minder.Receiver = kity.createClass( 'Receiver', {
         var keys = KityMinder.keymap;
 
         function setTextToContainer() {
+            if(!me.range.hasNativeRange()){
+                return;
+            }
             var text = me.container.textContent.replace( /[\u200b\t\r\n]/g, '' );
 
             if ( me.textShape.getOpacity() == 0 ) {
@@ -90,9 +99,7 @@ Minder.Receiver = kity.createClass( 'Receiver', {
             me.setContainerStyle();
             me.minderNode.setText( text );
             if ( text.length == 0 ) {
-
                 me.minderNode.setText( 'a' );
-
             }
             me.km.updateLayout( me.minderNode );
 
@@ -116,6 +123,7 @@ Minder.Receiver = kity.createClass( 'Receiver', {
         switch ( e.type ) {
 
         case 'keydown':
+
             isTypeText = false;
             isKeypress = false;
             switch ( e.originEvent.keyCode ) {
@@ -142,7 +150,7 @@ Minder.Receiver = kity.createClass( 'Receiver', {
 
                     setTimeout( function () {
                         me.range.updateNativeRange().insertNode( $( '<span>$$_kityminder_bookmark_$$</span>' )[ 0 ] );
-                        me.container.innerHTML = me.container.textContent.replace( /[\u200b\t\r\n]/g, '' );
+                        me.container.innerHTML = utils.unhtml( me.container.textContent.replace( /[\u200b\t\r\n]/g, '' ) );
                         var index = me.container.textContent.indexOf( '$$_kityminder_bookmark_$$' );
                         me.container.textContent = me.container.textContent.replace( '$$_kityminder_bookmark_$$', '' );
                         me.range.setStart( me.container.firstChild, index ).collapse( true ).select();
@@ -159,19 +167,19 @@ Minder.Receiver = kity.createClass( 'Receiver', {
             }
             isTypeText = true;
 
+            setTextToContainer();
             break;
 
 
 
         case 'keypress':
+
             if ( isTypeText )
-                setTextToContainer();
+//                setTextToContainer();
             isKeypress = true;
             break;
 
         case 'beforekeyup':
-
-
             switch ( keyCode ) {
             case keymap.Enter:
             case keymap.Tab:
@@ -198,9 +206,11 @@ Minder.Receiver = kity.createClass( 'Receiver', {
 
     updateIndex: function () {
         this.index = this.range.getStart().startOffset;
+        return this;
     },
     updateTextData: function () {
         this.textShape.textData = this.getTextOffsetData();
+        return this;
     },
     setSelection: function ( selection ) {
         this.selection = selection;
@@ -227,12 +237,12 @@ Minder.Receiver = kity.createClass( 'Receiver', {
         }
         return this;
     },
-    getBaseOffset: function (  ) {
-        var rb = this.textShape.getRenderBox( this.km.getRenderContainer() );
-//        if(!this.pr) {
-//            this.km.getRenderContainer().addShape(this.pr = new kity.Rect().stroke('green'));
-//        }
-//        this.pr.setSize(rb.width, rb.height).setPosition(rb.x, rb.y);
+    getBaseOffset: function ( refer ) {
+        var rb = this.textShape.getRenderBox( refer || this.km.getRenderContainer() );
+        //        if(!this.pr) {
+        //            this.km.getRenderContainer().addShape(this.pr = new kity.Rect().stroke('green'));
+        //        }
+        //        this.pr.setSize(rb.width, rb.height).setPosition(rb.x, rb.y);
         return rb;
     },
     setBaseOffset: function () {
@@ -240,9 +250,23 @@ Minder.Receiver = kity.createClass( 'Receiver', {
         return this;
     },
     setContainerStyle: function () {
-        var textShapeBox = this.getBaseOffset();
-
+        var textShapeBox = this.getBaseOffset( 'screen' );
         this.container.style.cssText = ";left:" + textShapeBox.x + 'px;top:' + ( textShapeBox.y - 5 ) + 'px;width:' + textShapeBox.width + 'px;height:' + textShapeBox.height + 'px;';
+
+        if ( !this.selection.isShow() ) {
+            var paperContainer = this.km.getPaper();
+            var width = paperContainer.node.parentNode.clientWidth;
+            var height = paperContainer.node.parentNode.clientHeight;
+            if ( width < this.container.offsetWidth + this.container.offsetLeft ) {
+                this.km.getRenderContainer().translate( width / -3, 0 );
+                this.setContainerStyle();
+            } else if ( height < this.container.offsetTop + this.container.offsetHeight ) {
+                this.km.getRenderContainer().translate( 0, height / -3 );
+                this.setContainerStyle()
+            }
+        }
+
+
         return this;
     },
     getTextOffsetData: function () {
@@ -253,7 +277,7 @@ Minder.Receiver = kity.createClass( 'Receiver', {
             try {
                 var box = this.textShape.getExtentOfChar( i );
             } catch ( e ) {
-                debugger
+                console.log( e )
             }
 
             this.textData.push( {
@@ -323,7 +347,7 @@ Minder.Receiver = kity.createClass( 'Receiver', {
                     if ( offset.x <= v.x + v.width / 2 ) {
                         me.selection.collapse()
                     } else {
-                        me.selection.setEndOffset( i + ( me.selection.endOffset > i || dir == 1 ? 1 : 0 ) )
+                        me.selection.setEndOffset( i + ( ( me.selection.endOffset > i || dir == 1 ) && i != me.textData.length - 1 ? 1 : 0 ) )
                     }
 
                 } else if ( i > me.index ) {
@@ -331,7 +355,7 @@ Minder.Receiver = kity.createClass( 'Receiver', {
                     me.selection.setEndOffset( i + 1 )
                 } else {
                     if ( dir == 1 ) {
-                        me.selection.setStartOffset( i + ( offset.x >= v.x + v.width / 2 ? 1 : 0 ) );
+                        me.selection.setStartOffset( i + ( offset.x >= v.x + v.width / 2 && i != me.textData.length - 1 ? 1 : 0 ) );
                     } else {
                         me.selection.setStartOffset( i );
                     }
@@ -349,12 +373,17 @@ Minder.Receiver = kity.createClass( 'Receiver', {
             endOffset = this.textData[ this.selection.endOffset ],
             width = 0;
         if ( this.selection.collapsed ) {
-            this.selection.updateShow( startOffset || this.textData[ this.textData.length - 1 ],1 );
+            this.selection.updateShow( startOffset || this.textData[ this.textData.length - 1 ], 1 );
             return this;
         }
         if ( !endOffset ) {
-            var lastOffset = this.textData[ this.textData.length - 1 ];
-            width = lastOffset.x - startOffset.x + lastOffset.width;
+            try {
+                var lastOffset = this.textData[ this.textData.length - 1 ];
+                width = lastOffset.x - startOffset.x + lastOffset.width;
+            } catch ( e ) {
+                console.log( 'e' )
+            }
+
         } else {
             width = endOffset.x - startOffset.x;
         }

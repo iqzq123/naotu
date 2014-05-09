@@ -38,6 +38,21 @@ KM.registerToolbarUI( 'hyperlink', function ( name ) {
 
     } );
 
+    me.addContextmenu( [ {
+            label: me.getLang( 'hyperlink.hyperlink' ),
+            exec: function (url) {
+                $dialog.kmui().show();
+            },
+            cmdName: 'hyperlink'
+        },{
+            label: me.getLang( 'hyperlink.unhyperlink' ),
+            exec: function () {
+                this.execCommand( 'unhyperlink' )
+            },
+            cmdName: 'unhyperlink'
+        }
+    ]);
+
     me.on( 'interactchange', function () {
         var state = this.queryCommandState( name );
         $btn.kmui().disabled( state == -1 ).active( state == 1 )

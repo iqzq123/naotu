@@ -1,13 +1,6 @@
-KM.registerToolbarUI( 'node', function ( name ) {
-    var shortcutKeys = {
-        "appendsiblingnode": "enter",
-        "appendchildnode": "tab",
-        "removenode": "del|backspace",
-        "editnode": "F2"
-    };
+KM.registerToolbarUI( 'zoom', function ( name ) {
 
     var me = this,
-        msg = me.getLang( 'node' ),
         label = me.getLang( 'tooltips.' + name ),
         options = {
             label: label,
@@ -15,10 +8,10 @@ KM.registerToolbarUI( 'node', function ( name ) {
             comboboxName: name,
             items: me.getOptions( name ) || [],
             itemStyles: [],
-            value: [],
+            value: me.getOptions( name ),
             autowidthitem: [],
-            enabledRecord: false,
-            enabledSelected: false
+            enabledRecord: false
+
         },
         $combox = null;
     if ( options.items.length == 0 ) {
@@ -30,32 +23,23 @@ KM.registerToolbarUI( 'node', function ( name ) {
     var comboboxWidget = $combox.kmui();
 
     comboboxWidget.on( 'comboboxselect', function ( evt, res ) {
-        me.execCommand( res.value, new MinderNode( me.getLang().topic ), true );
+        me.execCommand('zoom', res.value );
     } ).on( "beforeshow", function () {
         if ( $combox.parent().length === 0 ) {
             $combox.appendTo( me.$container.find( '.kmui-dialog-container' ) );
         }
-        var combox = $combox.kmui();
-
-        combox.traverseItems( function ( label, value ) {
-            if ( me.queryCommandState( value ) == -1 ) {
-                combox.disableItemByLabel( label )
-            } else {
-                combox.enableItemByLabel( label )
-            }
-        } )
     } );
     //状态反射
     me.on( 'interactchange', function () {
-        var state = 0;
-        utils.each( shortcutKeys, function ( k ) {
-            state = me.queryCommandState( k );
-            if ( state != -1 ) {
-                return false;
-            }
-        } );
+
+        var state = this.queryCommandState( name ),
+            value = this.queryCommandValue( name );
         //设置按钮状态
         comboboxWidget.button().kmui().disabled( state == -1 ).active( state == 1 );
+        if ( value ) {
+            //设置label
+            comboboxWidget.selectItemByLabel( value + '%' );
+        }
 
     } );
     //comboboxWidget.button().kmui().disabled(-1);
@@ -69,8 +53,7 @@ KM.registerToolbarUI( 'node', function ( name ) {
 
         utils.each( options.items, function ( k, v ) {
             options.value.push( v );
-
-            tempItems.push( ( msg[ k ] || k ) + '(' + shortcutKeys[ v ].toUpperCase() + ')' );
+            tempItems.push( v + '%' );
             options.autowidthitem.push( $.wordCountAdaptive( tempItems[ tempItems.length - 1 ] ) );
         } );
 

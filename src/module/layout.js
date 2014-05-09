@@ -41,8 +41,12 @@ KityMinder.registerModule( "LayoutModule", function () {
 		initStyle: function () {
 			var curStyle = this.getCurrentStyle();
 			this._rc.remove();
+			var transform = this._rc.transform;
 			this._rc = new kity.Group();
 			this._paper.addShape( this._rc );
+
+			this._rc.transform = transform;
+			this._rc._applyTransform();
 
 			var _root = this.getRoot();
 			_root.preTraverse( function ( n ) {
@@ -50,11 +54,6 @@ KityMinder.registerModule( "LayoutModule", function () {
 			} );
 			this.getLayoutStyle( curStyle ).initStyle.call( this );
 			this.fire( 'afterinitstyle' );
-		},
-		restoreStyle: function () {
-			var curStyle = this.getCurrentStyle();
-			clearPaper();
-			var _root = this.getRoot();
 		},
 		appendChildNode: function ( parent, node, focus, index ) {
 			var curStyle = this.getCurrentStyle();
@@ -215,6 +214,7 @@ KityMinder.registerModule( "LayoutModule", function () {
 					return null;
 				}
 				km.select( selectedNode, true );
+				km.textEditNode( selectedNode );
 			},
 			queryState: function ( km ) {
 				var selectedNode = km.getSelectedNode();
@@ -248,6 +248,7 @@ KityMinder.registerModule( "LayoutModule", function () {
 				var ico = e.kityEvent.targetShape && e.kityEvent.targetShape.container;
 				if ( ico && ico.class === "shicon" ) {
 					this.expandNode( ico );
+					this.fire( 'contentchange' );
 				}
 			},
 			"resize": function ( e ) {
@@ -258,11 +259,6 @@ KityMinder.registerModule( "LayoutModule", function () {
 			},
 			"import": function ( e ) {
 				this.initStyle();
-			},
-			"cloneNode": function ( e ) {
-				var target = e.targetNode;
-				var source = e.sourceNode;
-				target._layout = utils.extend( {}, source._layout );
 			}
 		},
 		'contextmenu': [ {

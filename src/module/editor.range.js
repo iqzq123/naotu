@@ -3,6 +3,9 @@ Minder.Range = kity.createClass('Range',{
         this.nativeRange = document.createRange();
         this.nativeSel = window.getSelection();
     },
+    hasNativeRange : function(){
+        return this.nativeSel.rangeCount != 0 ;
+    },
     select:function(){
         var start = this.nativeRange.startContainer;
         if(start.nodeType == 1 && start.childNodes.length == 0){
@@ -11,7 +14,12 @@ Minder.Range = kity.createClass('Range',{
             this.nativeRange.setStart(char,1);
             this.nativeRange.collapse(true);
         }
-        this.nativeSel.removeAllRanges();
+        try{
+            this.nativeSel.removeAllRanges();
+        }catch(e){
+
+        }
+
         this.nativeSel.addRange(this.nativeRange);
         return this;
     },
@@ -19,7 +27,7 @@ Minder.Range = kity.createClass('Range',{
         try{
             this.nativeRange.setStart(node,index);
         }catch(e){
-            console.log(e)
+            console.log('e')
         }
 
         return this;

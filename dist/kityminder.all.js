@@ -1,6 +1,6 @@
 /*!
  * ====================================================
- * kityminder - v1.0.0 - 2014-05-07
+ * kityminder - v1.1.3 - 2014-05-09
  * https://github.com/fex-team/kityminder
  * GitHub: https://github.com/fex-team/kityminder.git 
  * Copyright (c) 2014 f-cube @ FEX; Licensed MIT
@@ -291,9 +291,9 @@ var utils = Utils = KityMinder.Utils = {
                     element.onload = element.onreadystatechange = null;
                 }
             };
-            element.onerror = function () {
-                throw Error('The load ' + (obj.href || obj.src) + ' fails,check the url settings of file ')
-            };
+//            element.onerror = function () {
+//                throw Error('The load ' + (obj.href || obj.src) + ' fails,check the url settings of file ')
+//            };
             doc.getElementsByTagName("head")[0].appendChild(element);
         }
     }(),
@@ -313,6 +313,21 @@ var utils = Utils = KityMinder.Utils = {
         }
         return target;
     },
+    unhtml:function (str, reg) {
+        return str ? str.replace(reg || /[&<">'](?:(amp|lt|quot|gt|#39|nbsp);)?/g, function (a, b) {
+            if (b) {
+                return a;
+            } else {
+                return {
+                    '<':'&lt;',
+                    '&':'&amp;',
+                    '"':'&quot;',
+                    '>':'&gt;',
+                    "'":'&#39;'
+                }[a]
+            }
+        }) : '';
+    }
 
 };
 
@@ -614,7 +629,7 @@ var MinderNode = KityMinder.MinderNode = kity.createClass( "MinderNode", {
 
     },
     clone: function () {
-        function cloneNode( parent, isClonedNode,fn ) {
+        function cloneNode( parent, isClonedNode) {
             var _tmp = new KM.MinderNode( isClonedNode.getText() );
 
             _tmp.data = Utils.clonePlainObject( isClonedNode.getData() );
@@ -626,13 +641,12 @@ var MinderNode = KityMinder.MinderNode = kity.createClass( "MinderNode", {
             }
             for ( var i = 0, ci;
                 ( ci = isClonedNode.children[ i++ ] ); ) {
-                cloneNode( _tmp, ci ,fn);
+                cloneNode( _tmp, ci );
             }
-            fn && fn(isClonedNode,_tmp);
             return _tmp;
         }
-        return function (fn) {
-            return cloneNode( null, this,fn );
+        return function () {
+            return cloneNode( null, this );
         };
     }(),
     equals: function ( node ) {
@@ -1113,12 +1127,7 @@ kity.extendClass( Minder, {
         // 是否需要阻止导入
         var stoped = this._fire( new MinderEvent( 'beforeimport', params, true ) );
         if ( stoped ) return this;
-
         json = params.json || ( params.json = protocal.decode( local ) );
-
-        this._fire(new MinderEvent('importData',{
-            data:json
-        },true));
 
         if ( typeof json === 'object' && 'then' in json ) {
             var self = this;
@@ -1142,7 +1151,7 @@ kity.extendClass( Minder, {
         this._root.setData();
         this._root.setData( "currentstyle", curLayout );
         importNode( this._root, json, this );
-
+        this.fire( 'beforeimport' );
         this._fire( new MinderEvent( 'import', params, false ) );
         this._firePharse( {
             type: 'contentchange'
@@ -1444,6 +1453,14 @@ kity.extendClass( Minder, {
             this._hasEnterExecCommand = false;
         } else {
             result = cmd.execute.apply( cmd, [ me ].concat( cmdArgs ) );
+
+            if(!this._hasEnterExecCommand){
+                if ( cmd.isSelectionChanged() ) {
+                    this._firePharse( new MinderEvent( 'selectionchange' ) );
+                }
+
+                this._firePharse( new MinderEvent( 'interactchange' ) );
+            }
         }
 
         return result === undefined ? null : result;
@@ -1488,77 +1505,86 @@ kity.extendClass( Minder, {
 
 } );
 
-var keymap = KityMinder.keymap  = {
-    'Backspace' : 8,
-    'Tab' : 9,
-    'Enter' : 13,
+var keymap = KityMinder.keymap = {
+    'Backspace': 8,
+    'Tab': 9,
+    'Enter': 13,
 
-    'Shift' : 16,
-    'Control' : 17,
-    'Alt' : 18,
-    'CapsLock' : 20,
+    'Shift': 16,
+    'Control': 17,
+    'Alt': 18,
+    'CapsLock': 20,
 
     'Esc': 27,
 
-    'Spacebar' : 32,
+    'Spacebar': 32,
 
-    'PageUp' : 33,
-    'PageDown' : 34,
-    'End' : 35,
-    'Home' : 36,
+    'PageUp': 33,
+    'PageDown': 34,
+    'End': 35,
+    'Home': 36,
 
-    'Left' : 37,
-    'Up' : 38,
-    'Right' : 39,
-    'Down' : 40,
+    'Left': 37,
+    'Up': 38,
+    'Right': 39,
+    'Down': 40,
 
-    'Insert' : 45,
+    'Insert': 45,
 
-    'Del' : 46,
+    'Del': 46,
 
-    'NumLock' : 144,
+    'NumLock': 144,
 
-    'Cmd' : 91,
+    'Cmd': 91,
 
-    'F2' : 113,
-    'F3' : 114,
-    'F4' : 115,
+    'F2': 113,
+    'F3': 114,
+    'F4': 115,
 
-    '=' : 187,
-    '-' : 189,
+    '=': 187,
+    '-': 189,
 
-    "b" : 66,
-    'i' : 73,
+    "b": 66,
+    'i': 73,
     //回退
-    'z' : 90,
-    'y' : 89,
+    'z': 90,
+    'y': 89,
     //粘贴
-    'v' : 86,
-    'x' : 88,
+    'v': 86,
+    'x': 88,
 
-    's' : 83,
+    's': 83,
 
-    'n' : 78,
-    'notContentInput':{
-        8:1,
-        46:1,
-        13:1,
-        9:1,
-        33:1,
-        34:1,
-        35:1,
-        36:1,
-        16:1,
-        17:1,
-        18:1,
+    'n': 78,
+    '/': 191,
+    '.': 190,
+    'notContentInput': {
+        8: 1,
+        46: 1,
+        13: 1,
+        9: 1,
+        33: 1,
+        34: 1,
+        35: 1,
+        36: 1,
+        16: 1,
+        17: 1,
+        18: 1,
         //上下左右
-        37:1,38:1,39:1,40:1
+        37: 1,
+        38: 1,
+        39: 1,
+        40: 1,
+        113:1
     },
-    'isSelectedNodeKey':{
+    'isSelectedNodeKey': {
         //上下左右
-        37:1,38:1,39:1,40:1,
-        13:1,
-        9:1
+        37: 1,
+        38: 1,
+        39: 1,
+        40: 1,
+        13: 1,
+        9: 1
     }
 };
 
@@ -2034,24 +2060,13 @@ KityMinder.registerModule( "HistoryModule", function () {
 
     var Scene = kity.createClass( 'Scene', {
         constructor: function ( root ) {
-            this.data = root.clone( function ( node, cloneNode ) {
-                km.fire( 'cloneNode', {
-                    'targetNode': cloneNode,
-                    'sourceNode': node
-                } )
-            } );
+            this.data = root.clone();
         },
         getData: function () {
             return this.data;
         },
         cloneData: function () {
-            var fn = function ( node, cloneNode ) {
-                km.fire( 'cloneNode', {
-                    'targetNode': cloneNode,
-                    'sourceNode': node
-                } )
-            };
-            return this.getData().clone( fn );
+            return this.getData().clone(  );
         },
         equals: function ( scene ) {
             return this.getData().equals( scene.getData() )
@@ -2390,8 +2405,12 @@ KityMinder.registerModule( "LayoutModule", function () {
 		initStyle: function () {
 			var curStyle = this.getCurrentStyle();
 			this._rc.remove();
+			var transform = this._rc.transform;
 			this._rc = new kity.Group();
 			this._paper.addShape( this._rc );
+
+			this._rc.transform = transform;
+			this._rc._applyTransform();
 
 			var _root = this.getRoot();
 			_root.preTraverse( function ( n ) {
@@ -2399,11 +2418,6 @@ KityMinder.registerModule( "LayoutModule", function () {
 			} );
 			this.getLayoutStyle( curStyle ).initStyle.call( this );
 			this.fire( 'afterinitstyle' );
-		},
-		restoreStyle: function () {
-			var curStyle = this.getCurrentStyle();
-			clearPaper();
-			var _root = this.getRoot();
 		},
 		appendChildNode: function ( parent, node, focus, index ) {
 			var curStyle = this.getCurrentStyle();
@@ -2478,7 +2492,7 @@ KityMinder.registerModule( "LayoutModule", function () {
 				if ( parent.getType() !== "root" && parent.getChildren().length !== 0 && !parent.isExpanded() ) {
 					km.expandNode( parent );
 				}
-
+				parent.expand();
 				km.appendChildNode( parent, node, focus, silbling );
 				km.select( node, true );
 				return node;
@@ -2564,6 +2578,7 @@ KityMinder.registerModule( "LayoutModule", function () {
 					return null;
 				}
 				km.select( selectedNode, true );
+				km.textEditNode( selectedNode );
 			},
 			queryState: function ( km ) {
 				var selectedNode = km.getSelectedNode();
@@ -2597,6 +2612,7 @@ KityMinder.registerModule( "LayoutModule", function () {
 				var ico = e.kityEvent.targetShape && e.kityEvent.targetShape.container;
 				if ( ico && ico.class === "shicon" ) {
 					this.expandNode( ico );
+					this.fire( 'contentchange' );
 				}
 			},
 			"resize": function ( e ) {
@@ -2607,11 +2623,6 @@ KityMinder.registerModule( "LayoutModule", function () {
 			},
 			"import": function ( e ) {
 				this.initStyle();
-			},
-			"cloneNode": function ( e ) {
-				var target = e.targetNode;
-				var source = e.sourceNode;
-				target._layout = utils.extend( {}, source._layout );
 			}
 		},
 		'contextmenu': [ {
@@ -2692,7 +2703,9 @@ KityMinder.registerModule( "LayoutDefault", function () {
 				iconShape.addShapes( [ circle, plus, dec ] );
 				this.update();
 			},
-			switchState: function () {
+			switchState: function ( val ) {
+				if ( val === true || val === false )
+					this._show = !val;
 				if ( !this._show ) {
 					this._plus.setOpacity( 0 );
 					this._dec.setOpacity( 1 );
@@ -2873,7 +2886,7 @@ KityMinder.registerModule( "LayoutDefault", function () {
 				}
 				for ( var i = 0; i < children.length; i++ ) {
 					var childLayout = children[ i ].getLayout();
-					if ( children[ i ].getRenderContainer().getHeight() !== 0 )
+					if ( children[ i ].getRenderContainer().getPaper() && children[ i ].getRenderContainer().getHeight() !== 0 )
 						sum += childLayout.branchheight;
 				}
 				return sum;
@@ -3086,19 +3099,19 @@ KityMinder.registerModule( "LayoutDefault", function () {
 		}
 	};
 
-	var showNodeInView = function ( node ) {
-		var padding = 5;
-		var viewport = minder.getPaper().getViewPort();
-		var offset = node.getRenderContainer().getRenderBox( minder.getRenderContainer() );
+	// var showNodeInView = function ( node ) {
+	// 	// var padding = 5;
+	// 	// var viewport = minder.getPaper().getViewPort();
+	// 	// var offset = node.getRenderContainer().getRenderBox( minder.getRenderContainer() );
 
-		var tmpX = viewport.center.x * 2 - ( offset.x + offset.width );
-		var tmpY = viewport.center.y * 2 - ( offset.y + offset.height );
+	// 	// var tmpX = viewport.center.x * 2 - ( offset.x + offset.width );
+	// 	// var tmpY = viewport.center.y * 2 - ( offset.y + offset.height );
 
-		var dx = offset.x < 0 ? -offset.x : Math.min( tmpX, 0 );
-		var dy = offset.y < 0 ? -offset.y : Math.min( tmpY, 0 );
+	// 	// var dx = offset.x < 0 ? -offset.x : Math.min( tmpX, 0 );
+	// 	// var dy = offset.y < 0 ? -offset.y : Math.min( tmpY, 0 );
 
-		minder.getRenderContainer().fxTranslate( dx, dy, 100, "easeOutQuint" );
-	};
+	// 	// minder.getRenderContainer().fxTranslate( dx, dy, 100, "easeOutQuint" );
+	// };
 
 	var _style = {
 		getCurrentLayoutStyle: function () {
@@ -3121,10 +3134,10 @@ KityMinder.registerModule( "LayoutDefault", function () {
 			case "sub":
 				if ( highlight ) {
 					Layout.highlightshape.fill( nodeStyle.highlight ).setOpacity( 1 );
-					node.getTextShape().fill( 'black' );
+					node.getTextShape().fill( node.getData( 'fontcolor' ) || 'black' );
 				} else {
 					Layout.highlightshape.setOpacity( 0 );
-					node.getTextShape().fill( 'white' );
+					node.getTextShape().fill( node.getData( 'fontcolor' ) || 'white' );
 				}
 				break;
 			default:
@@ -3201,9 +3214,7 @@ KityMinder.registerModule( "LayoutDefault", function () {
 			var mains = _root.getChildren();
 			for ( var i = 0; i < mains.length; i++ ) {
 				this.appendChildNode( _root, mains[ i ] );
-				//console.log( mains[ i ].isExpanded() );
-				if ( mains[ i ].isExpanded() && mains[ i ].getChildren().length > 0 ) {
-					debugger;
+				if ( mains[ i ].isExpanded() && ( mains[ i ].getChildren().length > 0 ) ) {
 					minder.expandNode( mains[ i ] );
 				}
 			}
@@ -3223,7 +3234,6 @@ KityMinder.registerModule( "LayoutDefault", function () {
 				node.expand();
 				//遍历子树展开需要展开的节点
 				_buffer = [ node ];
-				debugger;
 				while ( _buffer.length !== 0 ) {
 					var c = _buffer[ 0 ].getChildren();
 					if ( _buffer[ 0 ].isExpanded() && c.length !== 0 ) {
@@ -3359,9 +3369,12 @@ KityMinder.registerModule( "LayoutDefault", function () {
 				updateConnectAndshIcon( set[ i ] );
 			}
 
-			if ( focus ) {
-				showNodeInView( node );
-			}
+			// if ( focus ) {
+			// 	showNodeInView( node );
+			// }
+			parent.expand();
+			var shicon = parent.getLayout().shicon;
+			if ( shicon ) shicon.switchState( true );
 		},
 		appendSiblingNode: function ( sibling, node, focus ) {
 			var parent = sibling.getParent();
@@ -4141,30 +4154,30 @@ var ViewDragger = kity.createClass( "ViewDragger", {
             lastPosition = null,
             currentPosition = null;
 
-        this._minder.on( 'normal.beforemousedown readonly.beforemousedown', function ( e ) {
+        this._minder.on( 'normal.mousedown readonly.mousedown readonly.touchstart', function ( e ) {
             // 点击未选中的根节点临时开启
             if ( e.getTargetNode() == this.getRoot() &&
                 ( !this.getRoot().isSelected() || !this.isSingleSelect() ) ) {
                 lastPosition = e.getPosition();
-                dragger.setEnabled( true );
                 isRootDrag = true;
-                var me = this;
-                setTimeout( function () {
-                    me.setStatus( 'hand' );
-                }, 1 );
             }
         } )
 
-        .on( 'hand.beforemousedown', function ( e ) {
+        .on('normal.mousemove normal.touchmove', function (e) {
+            if (!isRootDrag) return;
+            var offset = kity.Vector.fromPoints( lastPosition, e.getPosition());
+            if (offset.length() > 3) this.setStatus( 'hand' );
+        })
+
+        .on( 'hand.beforemousedown hand.beforetouchend', function ( e ) {
             // 已经被用户打开拖放模式
             if ( dragger.isEnabled() ) {
                 lastPosition = e.getPosition();
                 e.stopPropagation();
-                e.originEvent.preventDefault();
             }
         } )
 
-        .on( 'hand.beforemousemove', function ( e ) {
+        .on( 'hand.beforemousemove hand.beforetouchmove', function ( e ) {
             if ( lastPosition ) {
                 currentPosition = e.getPosition();
 
@@ -4172,11 +4185,13 @@ var ViewDragger = kity.createClass( "ViewDragger", {
                 var offset = kity.Vector.fromPoints( lastPosition, currentPosition );
                 dragger.move( offset );
                 e.stopPropagation();
+                e.preventDefault();
+                e.originEvent.preventDefault();
                 lastPosition = currentPosition;
             }
         } )
 
-        .on( 'hand.mouseup', function ( e ) {
+        .on( 'mouseup', function ( e ) {
             lastPosition = null;
 
             // 临时拖动需要还原状态
@@ -4209,20 +4224,20 @@ KityMinder.registerModule( 'View', function () {
         queryState: function ( minder ) {
             return minder._viewDragger.isEnabled() ? 1 : 0;
         },
-        enableReadOnly : false
+        enableReadOnly: false
     } );
 
     var CameraCommand = kity.createClass( "CameraCommand", {
         base: Command,
         execute: function ( km, focusNode ) {
             var viewport = km.getPaper().getViewPort();
-            var offset = focusNode.getRenderContainer().getRenderBox( 'paper' );
+            var offset = focusNode.getRenderContainer().getRenderBox( 'view' );
             var dx = viewport.center.x - offset.x - offset.width / 2,
                 dy = viewport.center.y - offset.y;
             km.getRenderContainer().fxTranslate( dx, dy, 1000, "easeOutQuint" );
             this.setContentChanged( false );
         },
-        enableReadOnly : false
+        enableReadOnly: false
     } );
 
     return {
@@ -4265,8 +4280,9 @@ KityMinder.registerModule( 'View', function () {
                 e.preventDefault();
             },
             'normal.dblclick readonly.dblclick': function ( e ) {
-                if ( e.getTargetNode() ) return;
-                this.execCommand( 'camera', this.getRoot() );
+                if ( e.kityEvent.targetShape instanceof kity.Paper ) {
+                    this.execCommand( 'camera', this.getRoot() );
+                }
             }
         }
     };
@@ -4292,11 +4308,17 @@ var MoveToParentCommand = kity.createClass( 'MoveToParentCommand', {
 	base: Command,
 	execute: function ( minder, nodes, parent ) {
 		var node;
+		if ( ( !parent.isExpanded() ) && ( parent.getChildren().length > 0 ) && ( parent.getType() !== 'root' ) ) {
+			minder.expandNode( parent );
+		}
 		for ( var i = nodes.length - 1; i >= 0; i-- ) {
 			node = nodes[ i ];
 			if ( node.getParent() ) {
 				minder.removeNode( [ node ] );
 				minder.appendChildNode( parent, node );
+				if ( node.isExpanded() && node.getChildren().length !== 0 ) {
+					minder.expandNode( node );
+				}
 			}
 		}
 		minder.select( nodes, true );
@@ -4578,8 +4600,8 @@ KityMinder.registerModule( "DropFile", function () {
 		e.stopPropagation();
 		var minder = this;
 
-		if( kity.Browser.ie && Number(kity.Browser.version) < 10 ){
-			alert('文件导入对IE浏览器仅支持10以上版本');
+		if ( kity.Browser.ie && Number( kity.Browser.version ) < 10 ) {
+			alert( '文件导入对IE浏览器仅支持10以上版本' );
 			return;
 		}
 
@@ -4606,9 +4628,9 @@ KityMinder.registerModule( "DropFile", function () {
 		createDraft( this );
 		social.setRemotePath( null, false );
 		this.execCommand( 'camera', this.getRoot() );
-		setTimeout(function() {
+		setTimeout( function () {
 			social.watchChanges( true );
-		}, 10);
+		}, 10 );
 		importing = false;
 	}
 
@@ -4630,7 +4652,7 @@ KityMinder.registerModule( "DropFile", function () {
 	}
 
 	function createDraft( minder ) {
-		draftManager = window.draftManager;
+		draftManager = window.draftManager || ( window.draftManager = new window.DraftManager( minder ) );
 		draftManager.create();
 	}
 
@@ -4788,11 +4810,11 @@ KityMinder.registerModule( "KeyboardModule", function () {
                 case keys.Backspace:
                 case keys.Del:
                     e.preventDefault();
-                    if ( this.queryCommandState( 'removenode' ) !== -1 ) this.execCommand( 'removenode' );
+                    this.execCommand( 'removenode' );
                     break;
                 case keys.F2:
                     e.preventDefault();
-                    if ( this.queryCommandState( 'editnode' ) !== -1 ) this.execCommand( 'editnode' );
+                    this.execCommand( 'editnode' );
                     break;
 
                 case keys.Left:
@@ -4981,9 +5003,34 @@ KityMinder.registerModule( "TextEditModule", function () {
         return km.receiver.isTextEditStatus();
     };
 
+    km.textEditNode = function(node){
+
+        var textShape = node.getTextShape();
+        this.setStatus('textedit');
+        sel.setHide();
+        sel.setStartOffset(0);
+        sel.setEndOffset(textShape.getContent().length);
+
+        receiver.setTextEditStatus(true)
+            .setSelection(sel)
+            .setKityMinder(this)
+            .setMinderNode(node)
+            .setTextShape(textShape)
+            .setRange(range)
+            .setBaseOffset()
+            .setContainerStyle()
+            .setSelectionHeight()
+            .setContainerTxt(textShape.getContent())
+            .updateTextData()
+            .updateSelectionShow()
+            .updateRange(range).setTextEditStatus(true);
+
+
+        sel.setData('relatedNode',node);
+    };
     var selectionByClick = false;
 
-
+    var dragmoveTimer;
     return {
         "events": {
             //插入光标
@@ -5025,7 +5072,7 @@ KityMinder.registerModule( "TextEditModule", function () {
                             .setBaseOffset()
                             .setContainerStyle()
                             .setSelectionHeight()
-                            .setCurrentIndex(e.getPosition())
+                            .setCurrentIndex(e.getPosition(this.getRenderContainer()))
                             .updateSelection()
                             .setRange(range);
                         sel.setData('relatedNode',node);
@@ -5035,7 +5082,7 @@ KityMinder.registerModule( "TextEditModule", function () {
                             sel.setShow();
                             selectionByClick = false;
                         }
-                        km.setStatus('textedit')
+                        km.setStatus('textedit');
                     }
                 }
             },
@@ -5088,6 +5135,7 @@ KityMinder.registerModule( "TextEditModule", function () {
 
                 if(mouseDownStatus){
                     if(!sel.collapsed ){
+
                         try{
                             receiver.updateRange(range)
                         }catch(e){
@@ -5134,10 +5182,8 @@ KityMinder.registerModule( "TextEditModule", function () {
                 if(mouseDownStatus){
                     e.stopPropagationImmediately();
 
-                    var offset = e.getPosition();
-
-                    if(Math.abs(offset.y - lastEvtPosition.y) >= 1 && Math.abs(lastEvtPosition.x - offset.x) <= 1 ){
-
+                    var offset = e.getPosition(this.getRenderContainer());
+                    if(Math.abs(offset.y - lastEvtPosition.y) >= 2 && Math.abs(lastEvtPosition.x - offset.x) <= 2 ){
                         sel.setHide();
                         mouseDownStatus = false;
                         return;
@@ -5175,45 +5221,45 @@ KityMinder.registerModule( "TextEditModule", function () {
                 sel.setHide();
             },
             "execCommand": function( e ) {
-//                var cmds = {
-//                    'appendchildnode' : 1,
-//                    'appendsiblingnode' : 1,
-//                    'editnode' : 1
-//                };
-//                if ( cmds[ e.commandName ] ){
-//
-//                    var node = km.getSelectedNode();
-//                    if( !node ){
-//                        return;
-//                    }
-//
-//                    var textShape = node.getTextShape();
-//
-//                    textShape.setStyle('cursor','default');
-//                    node.getTextShape().setStyle('cursor','text');
-//                    km.setStatus('textedit');
-//                    receiver.setTextEditStatus(true)
-//                        .setSelection(sel)
-//                        .setKityMinder(this)
-//                        .setMinderNode(node)
-//                        .setTextShape(textShape)
-//                        .setBaseOffset()
-//                        .setContainerStyle()
-//                        .setSelectionHeight()
-//                        .getTextOffsetData()
-//                        .setIndex(0)
-//                        .updateSelection()
-//                        .setRange(range);
-//
-//                    sel.setStartOffset(0);
-//                    sel.setEndOffset(textShape.getContent().length);
-//                    sel.setShow();
-//
-//                    receiver.updateSelectionShow(1)
-//                        .updateRange(range);
-//                    return;
-//
-//                }
+                var cmds = {
+                    'appendchildnode' : 1,
+                    'appendsiblingnode' : 1,
+                    'editnode' : 1
+                };
+                if ( cmds[ e.commandName ] ){
+
+                    var node = km.getSelectedNode();
+                    if( !node ){
+                        return;
+                    }
+
+                    var textShape = node.getTextShape();
+
+                    textShape.setStyle('cursor','default');
+                    node.getTextShape().setStyle('cursor','text');
+                    km.setStatus('textedit');
+                    receiver.setTextEditStatus(true)
+                        .setSelection(sel)
+                        .setKityMinder(this)
+                        .setMinderNode(node)
+                        .setTextShape(textShape)
+                        .setBaseOffset()
+                        .setContainerStyle()
+                        .setSelectionHeight()
+                        .getTextOffsetData()
+                        .setIndex(0)
+                        .updateSelection()
+                        .setRange(range);
+
+                    sel.setStartOffset(0);
+                    sel.setEndOffset(textShape.getContent().length);
+                    sel.setShow();
+
+                    receiver.updateSelectionShow(1)
+                        .updateRange(range);
+                    return;
+
+                }
 
                 if((e.commandName == 'priority' || e.commandName == 'progress') && this.getStatus() == 'textedit' ){
 
@@ -5253,6 +5299,9 @@ Minder.Range = kity.createClass('Range',{
         this.nativeRange = document.createRange();
         this.nativeSel = window.getSelection();
     },
+    hasNativeRange : function(){
+        return this.nativeSel.rangeCount != 0 ;
+    },
     select:function(){
         var start = this.nativeRange.startContainer;
         if(start.nodeType == 1 && start.childNodes.length == 0){
@@ -5261,7 +5310,12 @@ Minder.Range = kity.createClass('Range',{
             this.nativeRange.setStart(char,1);
             this.nativeRange.collapse(true);
         }
-        this.nativeSel.removeAllRanges();
+        try{
+            this.nativeSel.removeAllRanges();
+        }catch(e){
+
+        }
+
         this.nativeSel.addRange(this.nativeRange);
         return this;
     },
@@ -5269,7 +5323,7 @@ Minder.Range = kity.createClass('Range',{
         try{
             this.nativeRange.setStart(node,index);
         }catch(e){
-            console.log(e)
+            console.log('e')
         }
 
         return this;
@@ -5319,12 +5373,18 @@ Minder.Receiver = kity.createClass( 'Receiver', {
         return this.textEditStatus;
     },
     constructor: function ( km ) {
+        var me = this;
         this.setKityMinder( km );
         this.textEditStatus = false;
         var _div = document.createElement( 'div' );
         _div.setAttribute( 'contenteditable', true );
         _div.className = 'km_receiver';
         this.container = document.body.insertBefore( _div, document.body.firstChild );
+        if ( browser.ie && browser.version == 11 ) {
+            utils.listen( this.container, 'keydown keypress keyup', function ( e ) {
+                me.keyboardEvents.call( me, new MinderEvent( e.type == 'keyup' ? "beforekeyup" : e.type, e ) )
+            } )
+        }
         utils.addCssRule( 'km_receiver_css', ' .km_receiver{position:absolute;padding:0;margin:0;word-wrap:break-word;clip:rect(1em 1em 1em 1em);}' ); //
         this.km.on( 'textedit.beforekeyup textedit.keydown textedit.keypress textedit.paste', utils.proxy( this.keyboardEvents, this ) );
         this.timer = null;
@@ -5349,7 +5409,7 @@ Minder.Receiver = kity.createClass( 'Receiver', {
             textShape = new kity.Text();
         }
         this.textShape = textShape;
-        this.container.innerHTML = textShape.getContent();
+        this.container.innerHTML = utils.unhtml( textShape.getContent() );
         return this;
     },
     setTextShapeSize: function ( size ) {
@@ -5380,6 +5440,9 @@ Minder.Receiver = kity.createClass( 'Receiver', {
         var keys = KityMinder.keymap;
 
         function setTextToContainer() {
+            if(!me.range.hasNativeRange()){
+                return;
+            }
             var text = me.container.textContent.replace( /[\u200b\t\r\n]/g, '' );
 
             if ( me.textShape.getOpacity() == 0 ) {
@@ -5393,9 +5456,7 @@ Minder.Receiver = kity.createClass( 'Receiver', {
             me.setContainerStyle();
             me.minderNode.setText( text );
             if ( text.length == 0 ) {
-
                 me.minderNode.setText( 'a' );
-
             }
             me.km.updateLayout( me.minderNode );
 
@@ -5419,6 +5480,7 @@ Minder.Receiver = kity.createClass( 'Receiver', {
         switch ( e.type ) {
 
         case 'keydown':
+
             isTypeText = false;
             isKeypress = false;
             switch ( e.originEvent.keyCode ) {
@@ -5445,7 +5507,7 @@ Minder.Receiver = kity.createClass( 'Receiver', {
 
                     setTimeout( function () {
                         me.range.updateNativeRange().insertNode( $( '<span>$$_kityminder_bookmark_$$</span>' )[ 0 ] );
-                        me.container.innerHTML = me.container.textContent.replace( /[\u200b\t\r\n]/g, '' );
+                        me.container.innerHTML = utils.unhtml( me.container.textContent.replace( /[\u200b\t\r\n]/g, '' ) );
                         var index = me.container.textContent.indexOf( '$$_kityminder_bookmark_$$' );
                         me.container.textContent = me.container.textContent.replace( '$$_kityminder_bookmark_$$', '' );
                         me.range.setStart( me.container.firstChild, index ).collapse( true ).select();
@@ -5462,19 +5524,19 @@ Minder.Receiver = kity.createClass( 'Receiver', {
             }
             isTypeText = true;
 
+            setTextToContainer();
             break;
 
 
 
         case 'keypress':
+
             if ( isTypeText )
-                setTextToContainer();
+//                setTextToContainer();
             isKeypress = true;
             break;
 
         case 'beforekeyup':
-
-
             switch ( keyCode ) {
             case keymap.Enter:
             case keymap.Tab:
@@ -5501,9 +5563,11 @@ Minder.Receiver = kity.createClass( 'Receiver', {
 
     updateIndex: function () {
         this.index = this.range.getStart().startOffset;
+        return this;
     },
     updateTextData: function () {
         this.textShape.textData = this.getTextOffsetData();
+        return this;
     },
     setSelection: function ( selection ) {
         this.selection = selection;
@@ -5530,12 +5594,12 @@ Minder.Receiver = kity.createClass( 'Receiver', {
         }
         return this;
     },
-    getBaseOffset: function (  ) {
-        var rb = this.textShape.getRenderBox( this.km.getRenderContainer() );
-//        if(!this.pr) {
-//            this.km.getRenderContainer().addShape(this.pr = new kity.Rect().stroke('green'));
-//        }
-//        this.pr.setSize(rb.width, rb.height).setPosition(rb.x, rb.y);
+    getBaseOffset: function ( refer ) {
+        var rb = this.textShape.getRenderBox( refer || this.km.getRenderContainer() );
+        //        if(!this.pr) {
+        //            this.km.getRenderContainer().addShape(this.pr = new kity.Rect().stroke('green'));
+        //        }
+        //        this.pr.setSize(rb.width, rb.height).setPosition(rb.x, rb.y);
         return rb;
     },
     setBaseOffset: function () {
@@ -5543,9 +5607,23 @@ Minder.Receiver = kity.createClass( 'Receiver', {
         return this;
     },
     setContainerStyle: function () {
-        var textShapeBox = this.getBaseOffset();
-
+        var textShapeBox = this.getBaseOffset( 'screen' );
         this.container.style.cssText = ";left:" + textShapeBox.x + 'px;top:' + ( textShapeBox.y - 5 ) + 'px;width:' + textShapeBox.width + 'px;height:' + textShapeBox.height + 'px;';
+
+        if ( !this.selection.isShow() ) {
+            var paperContainer = this.km.getPaper();
+            var width = paperContainer.node.parentNode.clientWidth;
+            var height = paperContainer.node.parentNode.clientHeight;
+            if ( width < this.container.offsetWidth + this.container.offsetLeft ) {
+                this.km.getRenderContainer().translate( width / -3, 0 );
+                this.setContainerStyle();
+            } else if ( height < this.container.offsetTop + this.container.offsetHeight ) {
+                this.km.getRenderContainer().translate( 0, height / -3 );
+                this.setContainerStyle()
+            }
+        }
+
+
         return this;
     },
     getTextOffsetData: function () {
@@ -5556,7 +5634,7 @@ Minder.Receiver = kity.createClass( 'Receiver', {
             try {
                 var box = this.textShape.getExtentOfChar( i );
             } catch ( e ) {
-                debugger
+                console.log( e )
             }
 
             this.textData.push( {
@@ -5626,7 +5704,7 @@ Minder.Receiver = kity.createClass( 'Receiver', {
                     if ( offset.x <= v.x + v.width / 2 ) {
                         me.selection.collapse()
                     } else {
-                        me.selection.setEndOffset( i + ( me.selection.endOffset > i || dir == 1 ? 1 : 0 ) )
+                        me.selection.setEndOffset( i + ( ( me.selection.endOffset > i || dir == 1 ) && i != me.textData.length - 1 ? 1 : 0 ) )
                     }
 
                 } else if ( i > me.index ) {
@@ -5634,7 +5712,7 @@ Minder.Receiver = kity.createClass( 'Receiver', {
                     me.selection.setEndOffset( i + 1 )
                 } else {
                     if ( dir == 1 ) {
-                        me.selection.setStartOffset( i + ( offset.x >= v.x + v.width / 2 ? 1 : 0 ) );
+                        me.selection.setStartOffset( i + ( offset.x >= v.x + v.width / 2 && i != me.textData.length - 1 ? 1 : 0 ) );
                     } else {
                         me.selection.setStartOffset( i );
                     }
@@ -5652,12 +5730,17 @@ Minder.Receiver = kity.createClass( 'Receiver', {
             endOffset = this.textData[ this.selection.endOffset ],
             width = 0;
         if ( this.selection.collapsed ) {
-            this.selection.updateShow( startOffset || this.textData[ this.textData.length - 1 ], 0 );
+            this.selection.updateShow( startOffset || this.textData[ this.textData.length - 1 ], 1 );
             return this;
         }
         if ( !endOffset ) {
-            var lastOffset = this.textData[ this.textData.length - 1 ];
-            width = lastOffset.x - startOffset.x + lastOffset.width;
+            try {
+                var lastOffset = this.textData[ this.textData.length - 1 ];
+                width = lastOffset.x - startOffset.x + lastOffset.width;
+            } catch ( e ) {
+                console.log( 'e' )
+            }
+
         } else {
             width = endOffset.x - startOffset.x;
         }
@@ -5698,6 +5781,7 @@ Minder.Selection = kity.createClass( 'Selection', {
         this.startOffset = this.endOffset = 0;
         this.setOpacity(0.5);
         this.setStyle('cursor','text');
+        this._show = false;
     },
     collapse : function(toEnd){
 
@@ -5753,6 +5837,7 @@ Minder.Selection = kity.createClass( 'Selection', {
         }else{
             this.setOpacity(0.5);
         }
+        this.bringTop();
         return this;
     },
     setPosition: function ( offset ) {
@@ -5771,11 +5856,13 @@ Minder.Selection = kity.createClass( 'Selection', {
     setHide: function () {
         clearInterval( this.timer );
         this.setStyle( 'display', 'none' );
+        this._show = false;
         return this;
     },
     setShowHold: function () {
         clearInterval( this.timer );
         this.setStyle( 'display', '' );
+        this._show = true;
         return this;
     },
     setShow: function () {
@@ -5783,7 +5870,9 @@ Minder.Selection = kity.createClass( 'Selection', {
         var me = this,
             state = '';
         me.setStyle( 'display', '' );
+        me._show = true;
         if(this.collapsed){
+            me.setOpacity(1);
             this.timer = setInterval( function () {
                 me.setStyle( 'display', state );
                 state = state ? '' : 'none';
@@ -5791,6 +5880,9 @@ Minder.Selection = kity.createClass( 'Selection', {
         }
 
         return this;
+    },
+    isShow:function(){
+        return this._show;
     },
     setTextShape: function ( text ) {
         if ( !text ) {
@@ -6014,118 +6106,134 @@ KityMinder.registerModule( "fontmodule", function () {
 } );
 
 KityMinder.registerModule( 'Zoom', function () {
-	var MAX_ZOOM = 2,
-		MIN_ZOOM = kity.Browser.chrome ? 1 : 0.5,
-		ZOOM_STEP = Math.sqrt( 2 );
+    var me = this;
 
-	function zoom( minder, rate ) {
-		var paper = minder.getPaper();
-		var viewbox = paper.getViewBox();
-		var zoomValue = minder._zoomValue;
-		var w = viewbox.width,
-			h = viewbox.height,
-			x = viewbox.x,
-			y = viewbox.y;
-		var ww = w * rate,
-			hh = h * rate,
-			xx = x + ( w - ww ) / 2,
-			yy = y + ( h - hh ) / 2;
-		var animator = new kity.Animator( {
-			beginValue: viewbox,
-			finishValue: {
-				width: ww,
-				height: hh,
-				x: xx,
-				y: yy
-			},
-			setter: function ( target, value ) {
-				target.setViewBox( value.x, value.y, value.width, value.height );
-			}
-		} );
+    var timeline;
 
-		animator.start( paper, 500, 'ease' );
-		minder._zoomValue = zoomValue *= rate;
-	}
+    me.setOptions( 'zoom', [ 50, 80, 100, 120, 150, 200 ] );
 
-	var ZoomInCommand = kity.createClass( 'ZoomInCommand', {
-		base: Command,
-		execute: function ( minder ) {
-			if ( !this.queryState( minder ) ) {
-				zoom( minder, 1 / ZOOM_STEP );
-			}
-		},
-		queryState: function ( minder ) {
-			return ( minder._zoomValue > 1 / MAX_ZOOM ) ? 0 : -1;
-		},
-        enableReadOnly : false
-	} );
+    function zoomMinder( minder, zoom ) {
+        var paper = minder.getPaper();
+        var viewport = paper.getViewPort();
 
-	var ZoomOutCommand = kity.createClass( 'ZoomOutCommand', {
-		base: Command,
-		execute: function ( minder ) {
-			if ( !this.queryState( minder ) ) {
-				zoom( minder, ZOOM_STEP );
-			}
-		},
-		queryState: function ( minder ) {
-			return ( minder._zoomValue < 1 / MIN_ZOOM ) ? 0 : -1;
-		},
-        enableReadOnly : false
-	} );
+        if ( !zoom ) return;
 
-	return {
-		commands: {
-			'zoom-in': ZoomInCommand,
-			'zoom-out': ZoomOutCommand
-		},
+        var animator = new kity.Animator( {
+            beginValue: viewport.zoom,
+            finishValue: zoom / 100,
+            setter: function ( target, value ) {
+                viewport.zoom = value;
+                target.setViewPort( viewport );
+            }
+        } );
+        minder.zoom = zoom;
+        if ( timeline ) {
+            timeline.pause();
+        }
+        timeline = animator.start( paper, 500, 'ease' );
+    }
 
+    var ZoomCommand = kity.createClass( 'Zoom', {
+        base: Command,
+        execute: zoomMinder,
+        queryValue: function ( minder ) {
+            return minder.zoom;
+        }
+    } );
 
-		events: {
-			'normal.keydown': function ( e ) {
-				var me = this;
-				var originEvent = e.originEvent;
-				var keyCode = originEvent.keyCode || originEvent.which;
-				if ( keymap[ '=' ] == keyCode ) {
-					me.execCommand( 'zoom-in' );
-				}
-				if ( keymap[ '-' ] == keyCode ) {
-					me.execCommand( 'zoom-out' );
+    var ZoomInCommand = kity.createClass( 'ZoomInCommand', {
+        base: Command,
+        execute: function ( minder ) {
+            zoomMinder( minder, this.nextValue( minder ) );
+        },
+        queryState: function ( minder ) {
+            return ~this.nextValue( minder );
+        },
+        nextValue: function ( minder ) {
+            var stack = minder.getOptions( 'zoom' ),
+                i;
+            for ( i = 0; i < stack.length; i++ ) {
+                if ( stack[ i ] > minder.zoom ) return stack[ i ];
+            }
+            return 0;
+        },
+        enableReadOnly: false
+    } );
 
-				}
-			},
-			'ready': function () {
-				this._zoomValue = 1;
-			},
-			'normal.mousewheel readonly.mousewheel': function ( e ) {
-				if ( !e.originEvent.ctrlKey ) return;
-				var delta = e.originEvent.wheelDelta;
-				var me = this;
+    var ZoomOutCommand = kity.createClass( 'ZoomOutCommand', {
+        base: Command,
+        execute: function ( minder ) {
+            zoomMinder( minder, this.nextValue( minder ) );
+        },
+        queryState: function ( minder ) {
+            return ~this.nextValue( minder );
+        },
+        nextValue: function ( minder ) {
+            var stack = minder.getOptions( 'zoom' ),
+                i;
+            for ( i = stack.length - 1; i >= 0; i-- ) {
+                if ( stack[ i ] < minder.zoom ) return stack[ i ];
+            }
+            return 0;
+        },
+        enableReadOnly: false
+    } );
 
-				if ( !kity.Browser.mac ) {
-					delta = -delta;
-				}
+    return {
+        init: function () {
+            this.zoom = 100;
+        },
+        commands: {
+            'zoom-in': ZoomInCommand,
+            'zoom-out': ZoomOutCommand,
+            'zoom': ZoomCommand
+        },
+        events: {
+            'normal.keydown': function ( e ) {
+                var me = this;
+                var originEvent = e.originEvent;
+                var keyCode = originEvent.keyCode || originEvent.which;
+                if ( keymap[ '=' ] == keyCode ) {
+                    me.execCommand( 'zoom-in' );
+                }
+                if ( keymap[ '-' ] == keyCode ) {
+                    me.execCommand( 'zoom-out' );
 
-				// 稀释
-				if ( Math.abs( delta ) > 100 ) {
-					clearTimeout( this._wheelZoomTimeout );
-				} else {
-					return;
-				}
+                }
+            },
+            'ready': function () {
+                this._zoomValue = 1;
+            },
+            'normal.mousewheel readonly.mousewheel': function ( e ) {
+                if ( !e.originEvent.ctrlKey ) return;
+                var delta = e.originEvent.wheelDelta;
+                var me = this;
 
-				this._wheelZoomTimeout = setTimeout( function () {
-					var value;
-					var lastValue = me.getPaper()._zoom || 1;
-					if ( delta < 0 ) {
-						me.execCommand( 'zoom-in' );
-					} else if ( delta > 0 ) {
-						me.execCommand( 'zoom-out' );
-					}
-				}, 100 );
+                if ( !kity.Browser.mac ) {
+                    delta = -delta;
+                }
 
-				e.originEvent.preventDefault();
-			}
-		}
-	};
+                // 稀释
+                if ( Math.abs( delta ) > 100 ) {
+                    clearTimeout( this._wheelZoomTimeout );
+                } else {
+                    return;
+                }
+
+                this._wheelZoomTimeout = setTimeout( function () {
+                    var value;
+                    var lastValue = me.getPaper()._zoom || 1;
+                    if ( delta < 0 ) {
+                        me.execCommand( 'zoom-in' );
+                    } else if ( delta > 0 ) {
+                        me.execCommand( 'zoom-out' );
+                    }
+                }, 100 );
+
+                e.originEvent.preventDefault();
+            }
+        }
+    };
 } );
 
 KityMinder.registerModule( "NodeText", function () {
@@ -6147,7 +6255,6 @@ KityMinder.registerModule( "NodeText", function () {
 } );
 
 KityMinder.registerModule( "hyperlink", function () {
-    //var linkShapePath = "M 39.00,36.00l-3.00,0.00 c-3.915,0.00-7.206-2.511-8.448-6.00L39.00,30.00 c 1.659,0.00, 3.00-1.341, 3.00-3.00L42.00,21.00 c0.00-1.659-1.341-3.00-3.00-3.00L27.552,18.00 C 28.794,14.514, 32.085,12.00, 36.00,12.00l3.00,0.00 c 4.968,0.00, 9.00,4.029, 9.00,9.00l0.00,6.00 C 48.00,31.971, 43.968,36.00, 39.00,36.00z M 12.00,24.00 c0.00-1.659, 1.344-3.00, 3.00-3.00l18.00,0.00 c 1.659,0.00, 3.00,1.341, 3.00,3.00s-1.341,3.00-3.00,3.00L15.00,27.00 C 13.344,27.00, 12.00,25.659, 12.00,24.00z M 6.00,21.00l0.00,6.00 c0.00,1.659, 1.344,3.00, 3.00,3.00l11.448,0.00 C 19.209,33.489, 15.912,36.00, 12.00,36.00L9.00,36.00 c-4.971,0.00-9.00-4.029-9.00-9.00L0.00,21.00 c0.00-4.971, 4.029-9.00, 9.00-9.00l3.00,0.00 c 3.912,0.00, 7.209,2.514, 8.448,6.00L9.00,18.00 C 7.344,18.00, 6.00,19.341, 6.00,21.00z";
     var linkShapePath = "M16.614,10.224h-1.278c-1.668,0-3.07-1.07-3.599-2.556h4.877c0.707,0,1.278-0.571,1.278-1.278V3.834 c0-0.707-0.571-1.278-1.278-1.278h-4.877C12.266,1.071,13.668,0,15.336,0h1.278c2.116,0,3.834,1.716,3.834,3.834V6.39 C20.448,8.508,18.73,10.224,16.614,10.224z M5.112,5.112c0-0.707,0.573-1.278,1.278-1.278h7.668c0.707,0,1.278,0.571,1.278,1.278 S14.765,6.39,14.058,6.39H6.39C5.685,6.39,5.112,5.819,5.112,5.112z M2.556,3.834V6.39c0,0.707,0.573,1.278,1.278,1.278h4.877 c-0.528,1.486-1.932,2.556-3.599,2.556H3.834C1.716,10.224,0,8.508,0,6.39V3.834C0,1.716,1.716,0,3.834,0h1.278 c1.667,0,3.071,1.071,3.599,2.556H3.834C3.129,2.556,2.556,3.127,2.556,3.834z";
     return {
         "commands": {
@@ -6177,10 +6284,8 @@ KityMinder.registerModule( "hyperlink", function () {
                     return result;
                 },
                 queryValue: function ( km ) {
-                    if ( km.queryCommandState( 'hyperlink' ) == 1 ) {
-                        var node = km.getSelectedNode();
-                        return node.getData( 'hyperlink' );
-                    }
+                    var node = km.getSelectedNode();
+                    return node.getData( 'hyperlink' );
                 }
             } ),
             "unhyperlink": kity.createClass( "hyperlink", {
@@ -6201,12 +6306,12 @@ KityMinder.registerModule( "hyperlink", function () {
                     }
                     var link = false;
                     utils.each( nodes, function ( i, n ) {
-                        if(n.getData( 'hyperlink' )){
+                        if ( n.getData( 'hyperlink' ) ) {
                             link = true;
                             return false;
                         }
                     } );
-                    if(link){
+                    if ( link ) {
                         return 0
                     }
                     return -1;
@@ -6235,11 +6340,101 @@ KityMinder.registerModule( "hyperlink", function () {
 } );
 
 KityMinder.registerModule( "Expand", function () {
+	var minder = this;
 	var EXPAND_STATE_DATA = 'expandState',
 		STATE_EXPAND = 'expand',
 		STATE_COLLAPSE = 'collapse';
 
+	var layerTravel = function ( root, fn ) {
+		var _buffer = [ root ];
+		while ( _buffer.length !== 0 ) {
+			fn( _buffer[ 0 ] );
+			_buffer = _buffer.concat( _buffer[ 0 ].getChildren() );
+			_buffer.shift();
+		}
+	}
+	//获取选中的最上层节点
+	var filterDuplicate = function ( nodes ) {
+		var _buffer = ( [] ).concat( nodes );
+		var resultSet = [];
+		for ( var i = 0; i < _buffer.length; i++ ) {
+			var parent = _buffer[ i ].getParent();
+			if ( !parent ) {
+				resultSet = [ _buffer[ i ] ];
+				break;
+			} else {
+				//筛选
+				while ( parent ) {
+					if ( _buffer.indexOf( parent ) !== -1 ) {
+						_buffer[ i ] = null;
+						break;
+					}
+					parent = parent.getParent();
+				}
+				if ( _buffer[ i ] ) resultSet.push( _buffer[ i ] );
+			}
+		}
+		return resultSet;
+	}
 
+	var expandAll = function ( km, deal ) {
+		var selectedNodes = km.getSelectedNodes();
+		var topNodes = filterDuplicate( selectedNodes );
+		if ( selectedNodes.length === 0 || selectedNodes[ 0 ].getType() === 'root' || topNodes[ 0 ].getType() === 'root' ) {
+			layerTravel( km.getRoot(), function ( n ) {
+				if ( deal === 'expand' ) n.expand();
+				else n.collapse();
+			} );
+			km.initStyle();
+		} else {
+			for ( var i = 0; i < topNodes.length; i++ ) {
+				var node = topNodes[ i ];
+				var children = node.getChildren();
+				if ( children.length === 0 ) {
+					continue;
+				} else {
+					layerTravel( node, function ( n ) {
+						if ( n !== node ) {
+							if ( deal === 'expand' ) n.expand();
+							else n.collapse();
+						}
+					} );
+					var judge_val;
+					if ( deal === 'expand' ) {
+						judge_val = !node.isExpanded();
+					} else {
+						judge_val = node.isExpanded();
+					}
+					if ( judge_val ) {
+						km.expandNode( node );
+					} else {
+						km.expandNode( node );
+						km.expandNode( node );
+					}
+				}
+			}
+		}
+		for ( var j = 0; j < selectedNodes.length; j++ ) {
+			km.highlightNode( selectedNodes[ j ] );
+		}
+	}
+
+	// var setOptionValue = function ( root, layer, sub ) {
+	// 	var cur_layer = 1;
+	// 	var _buffer = root.getChildren();
+	// 	while ( cur_layer < layer ) {
+	// 		var layer_len = _buffer.length;
+	// 		for ( var i = 0; i < layer_len; i++ ) {
+	// 			var c = _buffer[ i ].getChildren();
+	// 			if ( c.length < sub || ( !sub ) ) {
+	// 				_buffer[ i ].expand();
+	// 				_buffer = _buffer.concat( c );
+	// 			}
+	// 		}
+	// 		_buffer.splice( 0, layer_len );
+	// 		cur_layer++;
+	// 	}
+	// }
 	/**
 	 * 该函数返回一个策略，表示递归到节点指定的层数
 	 *
@@ -6249,38 +6444,38 @@ KityMinder.registerModule( "Expand", function () {
 	 * @param {int} deep_level 指定的层数
 	 * @param {Function} policy_after_level 超过的层数执行的策略
 	 */
-	function generateDeepPolicy( deep_level, policy_after_level ) {
+		function generateDeepPolicy( deep_level, policy_after_level ) {
 
-		return function ( node, state, policy, level ) {
-			var children, child, i;
+			return function ( node, state, policy, level ) {
+				var children, child, i;
 
-			node.setData( EXPAND_STATE_DATA, state );
-			level = level || 1;
+				node.setData( EXPAND_STATE_DATA, state );
+				level = level || 1;
 
-			children = node.getChildren();
+				children = node.getChildren();
 
-			for ( i = 0; i < children.length; i++ ) {
-				child = children[ i ];
+				for ( i = 0; i < children.length; i++ ) {
+					child = children[ i ];
 
-				if ( level <= deep_level ) {
-					policy( child, state, policy, level + 1 );
-				} else if ( policy_after_level ) {
-					policy_after_level( child, state, policy, level + 1 );
+					if ( level <= deep_level ) {
+						policy( child, state, policy, level + 1 );
+					} else if ( policy_after_level ) {
+						policy_after_level( child, state, policy, level + 1 );
+					}
 				}
-			}
 
-		};
-	}
+			};
+		}
 
-	/**
-	 * 节点展开和收缩的策略常量
-	 *
-	 * 策略是一个处理函数，处理函数接受 3 个参数：
-	 *
-	 * @param {MinderNode} node   要处理的节点
-	 * @param {Enum}       state  取值为 "expand" | "collapse"，表示要对节点进行的操作是展开还是收缩
-	 * @param {Function}   policy 提供当前策略的函数，方便递归调用
-	 */
+		/**
+		 * 节点展开和收缩的策略常量
+		 *
+		 * 策略是一个处理函数，处理函数接受 3 个参数：
+		 *
+		 * @param {MinderNode} node   要处理的节点
+		 * @param {Enum}       state  取值为 "expand" | "collapse"，表示要对节点进行的操作是展开还是收缩
+		 * @param {Function}   policy 提供当前策略的函数，方便递归调用
+		 */
 	var EXPAND_POLICY = MinderNode.EXPAND_POLICY = {
 
 		/**
@@ -6322,7 +6517,7 @@ KityMinder.registerModule( "Expand", function () {
 		 */
 		collapse: function ( policy ) {
 			policy = policy || EXPAND_POLICY.KEEP_STATE;
-			policy( this, STATE_EXPAND, policy );
+			policy( this, STATE_COLLAPSE, policy );
 			return this;
 		},
 
@@ -6333,13 +6528,46 @@ KityMinder.registerModule( "Expand", function () {
 			return this.getData( EXPAND_STATE_DATA ) === STATE_EXPAND;
 		}
 	} );
+	var ExpandNodeCommand = kity.createClass( "ExpandNodeCommand", ( function () {
+		return {
+			base: Command,
+			execute: function ( km ) {
+				expandAll( km, 'expand' );
+			},
+			queryState: function ( km ) {
+				return 0;
+			}
+		};
+	} )() );
+	var CollapseNodeCommand = kity.createClass( "CollapseNodeCommand", ( function () {
+		return {
+			base: Command,
+			execute: function ( km ) {
+				expandAll( km, 'collapse' );
+			},
+			queryState: function ( km ) {
+				return 0;
+			}
+		};
+	} )() );
 	return {
 		'events': {
-			'importData': function ( e ) {
-				var data = e.data;
+			'beforeimport': function ( e ) {
+				// var _root = this.getRoot();
+				// var options = this.getOptions();
+				// var defaultExpand = options.defaultExpand;
+				//setOptionValue( _root, defaultExpand.defaultLayer, defaultExpand.defaultSubShow );
 			}
 		},
-		'commands': {}
+		'addShortcutKeys': {
+			"ExpandNode": "ctrl+/", //expand
+			"CollapseNode": "ctrl+." //collapse
+		},
+		'commands': {
+			'ExpandNode': ExpandNodeCommand,
+			'CollapseNode': CollapseNodeCommand
+		}
+
 	};
 } );
 
@@ -7764,7 +7992,7 @@ KM.ui.define( 'modal', {
         if ( !$obj.data( '$mergeObj' ) ) {
 
             $obj.data( '$mergeObj', me.root() );
-            $obj.on( 'click', function () {
+            $obj.on( 'wrapclick', function () {
                 me.toggle( $obj )
             } );
             me.data( '$mergeObj', $obj )
@@ -8111,7 +8339,7 @@ utils.extend( KityMinder, function () {
     }
 }() );
 
-KM.registerToolbarUI( 'bold italic redo undo unhyperlink',
+KM.registerToolbarUI( 'bold italic redo undo unhyperlink expandnode collapsenode hand zoom-in zoom-out',
     function ( name ) {
         var me = this;
         var $btn = $.kmuibutton( {
@@ -8409,25 +8637,6 @@ KM.registerToolbarUI( 'saveto', function ( name ) {
 
 } );
 
-KM.registerToolbarUI( 'hand zoom-in zoom-out expand contract',
-    function ( name ) {
-        var me = this;
-        var $btn = $.kmuibutton( {
-            icon: name,
-            click: function () {
-                console.log( name );
-                me.execCommand( name );
-            },
-            title: this.getLang( 'tooltips.' )[ name ] || ''
-        } );
-        me.on( 'interactchange', function () {
-            var state = me.queryCommandState( name );
-            $btn.kmui().disabled( state == -1 ).active( state == 1 );
-        } );
-        return $btn;
-    }
-);
-
 KM.registerUI( 'tooltips',
     function ( name ) {
         var km = this;
@@ -8539,7 +8748,8 @@ KM.registerToolbarUI( 'node', function ( name ) {
             itemStyles: [],
             value: [],
             autowidthitem: [],
-            enabledRecord: false
+            enabledRecord: false,
+            enabledSelected: false
         },
         $combox = null;
     if ( options.items.length == 0 ) {
@@ -8632,12 +8842,12 @@ KM.registerUI( 'contextmenu', function () {
     });
     me.$container.append($menu);
     me.on('contextmenu',function(e){
-        if(this.getSelectedNodes().length == 0){
-            var node = e.getTargetNode();
-            if(node){
-                this.select(node);
-            }
+        var node = e.getTargetNode();
+        if(node){
+            this.removeAllSelectedNodes();
+            this.select(node)
         }
+
 
         var items = me.getContextmenu();
         var data = [];
@@ -8764,11 +8974,92 @@ KM.registerToolbarUI( 'hyperlink', function ( name ) {
 
     } );
 
+    me.addContextmenu( [ {
+            label: me.getLang( 'hyperlink.hyperlink' ),
+            exec: function (url) {
+                $dialog.kmui().show();
+            },
+            cmdName: 'hyperlink'
+        },{
+            label: me.getLang( 'hyperlink.unhyperlink' ),
+            exec: function () {
+                this.execCommand( 'unhyperlink' )
+            },
+            cmdName: 'unhyperlink'
+        }
+    ]);
+
     me.on( 'interactchange', function () {
         var state = this.queryCommandState( name );
         $btn.kmui().disabled( state == -1 ).active( state == 1 )
     } );
     return $btn;
+} );
+
+KM.registerToolbarUI( 'zoom', function ( name ) {
+
+    var me = this,
+        label = me.getLang( 'tooltips.' + name ),
+        options = {
+            label: label,
+            title: label,
+            comboboxName: name,
+            items: me.getOptions( name ) || [],
+            itemStyles: [],
+            value: me.getOptions( name ),
+            autowidthitem: [],
+            enabledRecord: false
+
+        },
+        $combox = null;
+    if ( options.items.length == 0 ) {
+        return null;
+    }
+
+    //实例化
+    $combox = $.kmuibuttoncombobox( transForInserttopic( options ) ).css( 'zIndex', me.getOptions( 'zIndex' ) + 1 );
+    var comboboxWidget = $combox.kmui();
+
+    comboboxWidget.on( 'comboboxselect', function ( evt, res ) {
+        me.execCommand('zoom', res.value );
+    } ).on( "beforeshow", function () {
+        if ( $combox.parent().length === 0 ) {
+            $combox.appendTo( me.$container.find( '.kmui-dialog-container' ) );
+        }
+    } );
+    //状态反射
+    me.on( 'interactchange', function () {
+
+        var state = this.queryCommandState( name ),
+            value = this.queryCommandValue( name );
+        //设置按钮状态
+        comboboxWidget.button().kmui().disabled( state == -1 ).active( state == 1 );
+        if ( value ) {
+            //设置label
+            comboboxWidget.selectItemByLabel( value + '%' );
+        }
+
+    } );
+    //comboboxWidget.button().kmui().disabled(-1);
+    return comboboxWidget.button().addClass( 'kmui-combobox' );
+
+
+
+    function transForInserttopic( options ) {
+
+        var tempItems = [];
+
+        utils.each( options.items, function ( k, v ) {
+            options.value.push( v );
+            tempItems.push( v + '%' );
+            options.autowidthitem.push( $.wordCountAdaptive( tempItems[ tempItems.length - 1 ] ) );
+        } );
+
+        options.items = tempItems;
+        return options;
+
+    }
+
 } );
 
 /*
@@ -8962,6 +9253,7 @@ KityMinder.registerProtocal( 'freemind', function () {
         var json = $.xml2json(xml);
         var result = {};
         processTopic(json.node, result);
+        console.log(result);
         return result;
     }
 
@@ -9054,8 +9346,11 @@ KityMinder.registerProtocal( 'mindmanager', function () {
 
     function xml2km( xml ) {
         var json = $.xml2json( xml );
+        
         var result = {};
         processTopic( json.OneTopic.Topic, result );
+
+        console.log(result);
         return result;
     }
 

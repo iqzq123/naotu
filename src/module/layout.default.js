@@ -217,7 +217,7 @@ KityMinder.registerModule( "LayoutDefault", function () {
 				}
 				for ( var i = 0; i < children.length; i++ ) {
 					var childLayout = children[ i ].getLayout();
-					if ( children[ i ].getRenderContainer().getHeight() !== 0 )
+					if ( children[ i ].getRenderContainer().getPaper() && children[ i ].getRenderContainer().getHeight() !== 0 )
 						sum += childLayout.branchheight;
 				}
 				return sum;
@@ -430,19 +430,19 @@ KityMinder.registerModule( "LayoutDefault", function () {
 		}
 	};
 
-	var showNodeInView = function ( node ) {
-		var padding = 5;
-		var viewport = minder.getPaper().getViewPort();
-		var offset = node.getRenderContainer().getRenderBox( minder.getRenderContainer() );
+	// var showNodeInView = function ( node ) {
+	// 	// var padding = 5;
+	// 	// var viewport = minder.getPaper().getViewPort();
+	// 	// var offset = node.getRenderContainer().getRenderBox( minder.getRenderContainer() );
 
-		var tmpX = viewport.center.x * 2 - ( offset.x + offset.width );
-		var tmpY = viewport.center.y * 2 - ( offset.y + offset.height );
+	// 	// var tmpX = viewport.center.x * 2 - ( offset.x + offset.width );
+	// 	// var tmpY = viewport.center.y * 2 - ( offset.y + offset.height );
 
-		var dx = offset.x < 0 ? -offset.x : Math.min( tmpX, 0 );
-		var dy = offset.y < 0 ? -offset.y : Math.min( tmpY, 0 );
+	// 	// var dx = offset.x < 0 ? -offset.x : Math.min( tmpX, 0 );
+	// 	// var dy = offset.y < 0 ? -offset.y : Math.min( tmpY, 0 );
 
-		minder.getRenderContainer().fxTranslate( dx, dy, 100, "easeOutQuint" );
-	};
+	// 	// minder.getRenderContainer().fxTranslate( dx, dy, 100, "easeOutQuint" );
+	// };
 
 	var _style = {
 		getCurrentLayoutStyle: function () {
@@ -465,10 +465,10 @@ KityMinder.registerModule( "LayoutDefault", function () {
 			case "sub":
 				if ( highlight ) {
 					Layout.highlightshape.fill( nodeStyle.highlight ).setOpacity( 1 );
-					node.getTextShape().fill( 'black' );
+					node.getTextShape().fill( node.getData( 'fontcolor' ) || 'black' );
 				} else {
 					Layout.highlightshape.setOpacity( 0 );
-					node.getTextShape().fill( 'white' );
+					node.getTextShape().fill( node.getData( 'fontcolor' ) || 'white' );
 				}
 				break;
 			default:
@@ -545,7 +545,7 @@ KityMinder.registerModule( "LayoutDefault", function () {
 			var mains = _root.getChildren();
 			for ( var i = 0; i < mains.length; i++ ) {
 				this.appendChildNode( _root, mains[ i ] );
-				if ( mains[ i ].isExpanded() && mains[ i ].getChildren().length > 0 ) {
+				if ( mains[ i ].isExpanded() && ( mains[ i ].getChildren().length > 0 ) ) {
 					minder.expandNode( mains[ i ] );
 				}
 			}
@@ -568,7 +568,6 @@ KityMinder.registerModule( "LayoutDefault", function () {
 				while ( _buffer.length !== 0 ) {
 					var c = _buffer[ 0 ].getChildren();
 					if ( _buffer[ 0 ].isExpanded() && c.length !== 0 ) {
-						//_buffer[ 0 ].getLayout().shicon.switchState( true );
 						for ( var x = 0; x < c.length; x++ ) {
 							minder.appendChildNode( _buffer[ 0 ], c[ x ] );
 						}
@@ -701,9 +700,10 @@ KityMinder.registerModule( "LayoutDefault", function () {
 				updateConnectAndshIcon( set[ i ] );
 			}
 
-			if ( focus ) {
-				showNodeInView( node );
-			}
+			// if ( focus ) {
+			// 	showNodeInView( node );
+			// }
+			parent.expand();
 			var shicon = parent.getLayout().shicon;
 			if ( shicon ) shicon.switchState( true );
 		},
