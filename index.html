@@ -67,7 +67,7 @@
             url: $(this).data('url'),
             type: $(this).data('type'),
             target: 'kity-minder',
-            success: function() {
+            success: function(minder) {
                 $loading.hide();
             },
             progress: function(percent) {
