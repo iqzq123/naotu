@@ -565,13 +565,16 @@ KityMinder.registerModule( "LayoutDefault", function () {
 						minder.appendChildNode( parent, curNode );
 					}
 				}
-				minder.fire( 'renderprogress' ); //在这里抛出render过程的值
+				//minder.fire( 'renderprogress' ); //在这里抛出render过程的值
+				minder._fire( new MinderEvent( 'renderprogress', {
+					progress: i / nodes.length
+				}, true ) );
 				if ( i === nodes.length ) {
 					window.clearInterval( nodeAppendInterval );
 					minder.fire( 'rendercomplete' );
 				}
 				idx += step;
-			}, 0 );
+			}, 1000 );
 			_root.setPoint( _root.getLayout().x, _root.getLayout().y );
 		},
 		expandNode: function ( ico ) {
