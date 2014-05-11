@@ -543,12 +543,35 @@ KityMinder.registerModule( "LayoutDefault", function () {
 			if ( historyPoint ) _root.setPoint( historyPoint.x, historyPoint.y );
 			//渲染首层节点
 			var mains = _root.getChildren();
-			for ( var i = 0; i < mains.length; i++ ) {
-				this.appendChildNode( _root, mains[ i ] );
-				if ( mains[ i ].isExpanded() && ( mains[ i ].getChildren().length > 0 ) ) {
-					minder.expandNode( mains[ i ] );
-				}
+			if ( mains.length === 0 ) {
+				return false;
+			};
+			var _buffer = [ _root ];
+			var nodes = [ _root ];
+			var idx = 0,
+				step = 2;
+			//统计节点数
+			while ( _buffer.length !== 0 ) {
+				var children = _buffer[ 0 ].getChildren();
+				_buffer = _buffer.concat( children );
+				nodes = nodes.concat( children );
+				_buffer.shift();
 			}
+			var nodeAppendInterval = window.setInterval( function () {
+				for ( var i = idx; i < nodes.length && i < ( idx + step ); i++ ) {
+					var curNode = nodes[ i ];
+					var parent = curNode.getParent();
+					if ( parent ) {
+						minder.appendChildNode( parent, curNode );
+					}
+				}
+				minder.fire( 'renderprogress' ); //在这里抛出render过程的值
+				if ( i === nodes.length ) {
+					window.clearInterval( nodeAppendInterval );
+					minder.fire( 'rendercomplete' );
+				}
+				idx += step;
+			}, 0 );
 			_root.setPoint( _root.getLayout().x, _root.getLayout().y );
 		},
 		expandNode: function ( ico ) {
