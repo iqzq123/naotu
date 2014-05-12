@@ -543,9 +543,6 @@ KityMinder.registerModule( "LayoutDefault", function () {
 			if ( historyPoint ) _root.setPoint( historyPoint.x, historyPoint.y );
 			//渲染首层节点
 			var mains = _root.getChildren();
-			if ( mains.length === 0 ) {
-				return false;
-			};
 			var _buffer = [ _root ];
 			var nodes = [ _root ];
 			var idx = 0,
