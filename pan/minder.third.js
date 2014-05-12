@@ -69,7 +69,7 @@
                 if ( e.lengthComputable ) {
                     progressCall( downloadPercentTotal * e.loaded / e.total );
                 }
-
+                break;
             case 'load':
                 if ( xhr.status == 200 && xhr.readyState == 4 /* DONE */ ) {
                     progressCall( downloadPercentTotal );
