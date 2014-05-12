@@ -69,11 +69,11 @@ KityMinder.registerProtocal( 'mindmanager', function () {
 
     function xml2km( xml ) {
         var json = $.xml2json( xml );
-        
+
         var result = {};
         processTopic( json.OneTopic.Topic, result );
 
-        console.log(result);
+        console.log( result );
         return result;
     }
 
@@ -91,10 +91,13 @@ KityMinder.registerProtocal( 'mindmanager', function () {
 
             return {
                 then: function ( local, callback ) {
-
+                    var executed = false;
                     getEntries( local, function ( entries ) {
+
                         entries.forEach( function ( entry ) {
-                            if ( entry.filename == 'Document.xml' ) {
+                            //console.log( entries )
+                            if ( entry.filename == 'Document.xml' && !executed ) {
+                                executed = true;
                                 entry.getData( new zip.TextWriter(), function ( text ) {
                                     var km = xml2km( $.parseXML( text ) );
                                     callback && callback( km );
