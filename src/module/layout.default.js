@@ -549,7 +549,7 @@ KityMinder.registerModule( "LayoutDefault", function () {
 			var _buffer = [ _root ];
 			var nodes = [ _root ];
 			var idx = 0,
-				step = 2;
+				step = 10;
 			//统计节点数
 			while ( _buffer.length !== 0 ) {
 				var children = _buffer[ 0 ].getChildren();
@@ -574,7 +574,7 @@ KityMinder.registerModule( "LayoutDefault", function () {
 					minder.fire( 'rendercomplete' );
 				}
 				idx += step;
-			}, 1000 );
+			}, 0 );
 			_root.setPoint( _root.getLayout().x, _root.getLayout().y );
 		},
 		expandNode: function ( ico ) {
