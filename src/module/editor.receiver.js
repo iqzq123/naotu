@@ -254,19 +254,23 @@ Minder.Receiver = kity.createClass( 'Receiver', {
         return this;
     },
     setContainerStyle: function () {
-        var textShapeBox = this.getBaseOffset( 'screen' );
-        this.container.style.cssText = ";left:" + textShapeBox.x + 'px;top:' + ( textShapeBox.y + textShapeBox.height * 0.1 ) + 'px;width:' + textShapeBox.width + 'px;height:' + textShapeBox.height + 'px;';
+        var textShapeBox = this.getBaseOffset( 'paper' );
+        var container = this.container;
 
+        function realSet() {
+            container.style.cssText = ";left:" + textShapeBox.x + 'px;top:' + ( textShapeBox.y + textShapeBox.height * 0.1 ) + 'px;width:' + textShapeBox.width + 'px;height:' + textShapeBox.height + 'px;';
+        }
+        realSet();
         if ( !this.selection.isShow() ) {
             var paperContainer = this.km.getPaper();
             var width = paperContainer.node.parentNode.clientWidth;
             var height = paperContainer.node.parentNode.clientHeight;
             if ( width < this.container.offsetWidth + this.container.offsetLeft ) {
-                this.km.getRenderContainer().translate( width / -3, 0 );
-                this.setContainerStyle();
+                this.km.getRenderContainer().fxTranslate( width / -4, 0, 100, 'easeInCubic' );
+                realSet();
             } else if ( height < this.container.offsetTop + this.container.offsetHeight ) {
-                this.km.getRenderContainer().translate( 0, height / -3 );
-                this.setContainerStyle();
+                this.km.getRenderContainer().fxTranslate( 0, height / -4 );
+                realSet();
             }
         }
 

@@ -9,7 +9,7 @@ KityMinder.registerModule( "Select", function () {
         var startPosition = null;
 
         // 选区的图形
-        var marqueeShape = new kity.Path().fill( 'rgba(255,255,255,.3)' ).stroke( 'white' );
+        var marqueeShape = new kity.Path().fill( 'rgba(154,255,156,.1)' ).stroke( '#73bf75' );
 
         // 标记是否已经启动框选状态
         //    并不是 mousedown 发生之后就启动框选状态，而是检测到移动了一定的距离（MARQUEE_MODE_THRESHOLD）之后

@@ -1,4 +1,4 @@
-KM.registerToolbarUI('forecolor', function (name) {
+KM.registerToolbarUI('forecolor backcolor', function (name) {
     function getCurrentColor() {
         return $colorLabel.css('background-color');
     }
@@ -9,7 +9,11 @@ KM.registerToolbarUI('forecolor', function (name) {
         $btn = null;
 
     this.on('interactchange', function () {
-        var state = this.queryCommandState(name);
+        var cmd = {
+            forecolor: 'forecolor',
+            backcolor: 'backgroundcolor'
+        }[name];
+        var state = this.queryCommandState(cmd);
         $btn.kmui().disabled(state == -1).active(state == 1);
     });
 
@@ -21,7 +25,10 @@ KM.registerToolbarUI('forecolor', function (name) {
         click: function () {
             var color = kity.Color.parse(getCurrentColor()).toHEX();
             if (color != '#000000') {
-                me.execCommand(name, color);
+                me.execCommand({
+                    forecolor: 'forecolor',
+                    backcolor: 'backgroundcolor'
+                }[name], color);
             }
         }
     });
@@ -36,7 +43,10 @@ KM.registerToolbarUI('forecolor', function (name) {
     }).on('pickcolor', function (evt, color) {
         window.setTimeout(function () {
             $colorLabel.css("backgroundColor", color);
-            me.execCommand(name, color);
+            me.execCommand({
+                forecolor: 'forecolor',
+                backcolor: 'backgroundcolor'
+            }[name], color);
         }, 0);
     }).on('show', function () {
         KM.setActiveWidget($colorPickerWidget.kmui().root());
@@ -48,7 +58,7 @@ KM.registerToolbarUI('forecolor', function (name) {
         }
         $colorPickerWidget.kmui().show($btn, {
             caretDir: "down",
-            offsetTop: -5,
+            offsetTop: 0,
             offsetLeft: 8,
             caretLeft: 11,
             caretTop: -8

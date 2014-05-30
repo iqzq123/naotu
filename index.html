@@ -22,10 +22,15 @@
 
 <body>
     <div id="dialog">
-        <div id="kityminder" onselectstart="return false"></div>
+        <div class="dialog-title">思维导图</div>
+        <div class="dialog-body">
+            <div id="kityminder" onselectstart="return false"></div>
+        </div>
+        <div class="dialog-bottom"></div>
     </div>
 </body>
 <script>
-    window.km = KM.getKityMinder('kityminder');
+    km = KM.getKityMinder('kityminder');
+    km.initStyle();
 </script>
 </html>

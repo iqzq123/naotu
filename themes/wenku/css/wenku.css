@@ -1,1 +1,57 @@
-
+html,body,div,ul{margin:0;padding:0;list-style:none}
+body{background:url(../images/body.png) no-repeat}
+#dialog{position:absolute;width:780px;border-radius:4px;border:1px solid #b2aead;left:50%;top:100px;margin-left:-390px;background:#f9f8f5}#dialog .dialog-title{height:40px;line-height:40px;padding-left:20px;cursor:move}
+#dialog .dialog-body{height:500px;border-top:1px solid #b3b3b3;border-bottom:1px solid #b3b3b3}
+#dialog .dialog-bottom{height:60px;line-height:60px}
+#kityminder{width:100%;height:100%;background:#fff;position:relative}
+.kmui-toolbar{height:62px;padding:1px;position:absolute;left:0;top:0;right:0;z-index:1}.kmui-toolbar .kmui-btn-toolbar{background:#f6f6ee;border-bottom:1px solid #ccc;box-shadow:0 1px 1px #f2f2f2;z-index:9999;overflow:hidden}
+.kmui-toolbar .kmui-dialog-container{position:absolute;top:1px;left:0;right:0;bottom:-435px;z-index:0;overflow:hidden;pointer-events:none}.kmui-toolbar .kmui-dialog-container *{pointer-events:auto}
+.kmui-toolbar .kmui-btn,.kmui-toolbar .kmui-separator{float:left}
+.kmui-btn{display:block;width:80px;height:60px;line-height:60px;text-align:center;border:1px solid transparent;border-radius:2px;cursor:default;position:relative;color:#999;font-size:12px;font-family:Arial,"Heiti SC","Microsoft Yahei";cursor:pointer}.kmui-btn:hover{background:#ebf7e6;border-color:#a9d9ab}
+.kmui-btn:active{background:#e0f0dd;border-color:#8fcc91}
+.kmui-btn.kmui-disabled{opacity:.3;cursor:default}.kmui-btn.kmui-disabled:hover{background:none;border-color:transparent}
+.kmui-btn.kmui-active{background:#fff;border-color:#ccc}
+.kmui-separator{width:0;font-size:0;border-left:1px solid #deddd7;border-right:1px solid #fff;height:44px;margin:9px 2px}
+.kmui-tooltip{display:none !important;height:0;overflow:hidden}
+.kmui-btn-name-node:before{content:' ';display:block;position:absolute;left:10px;top:6px;width:60px;height:30px;background:url(../images/toolbar.png) no-repeat}
+.kmui-btn-name-node .kmui-button-label{position:absolute;bottom:8px;display:block;width:80px;left:0;height:20px;line-height:20px}
+.kmui-btn-name-fontfamily .kmui-button-label,.kmui-btn-name-fontsize .kmui-button-label{display:inline-block;padding-left:10px;height:30px;line-height:30px;vertical-align:middle}
+.kmui-btn-name-fontfamily .kmui-caret,.kmui-btn-name-fontsize .kmui-caret{display:inline-block;background:url(../images/toolbar.png) -80px 0 no-repeat;width:20px;height:30px;vertical-align:middle}
+.kmui-splitbutton-forecolor{float:left}.kmui-splitbutton-forecolor .kmui-btn{display:none}.kmui-splitbutton-forecolor .kmui-btn.kmui-dropdown-toggle{display:block;width:56px;margin-left:14px}.kmui-splitbutton-forecolor .kmui-btn.kmui-dropdown-toggle .kmui-caret{width:30px;height:30px;position:absolute;background:url(../images/toolbar.png) -130px 0 no-repeat;left:13px;top:6px}
+.kmui-splitbutton-forecolor .kmui-btn.kmui-dropdown-toggle:after{display:block;position:absolute;left:0;right:0;bottom:7px;height:20px;line-height:20px;content:'字符颜色'}
+.kmui-splitbutton-backcolor{float:left}.kmui-splitbutton-backcolor .kmui-btn{display:none}.kmui-splitbutton-backcolor .kmui-btn.kmui-dropdown-toggle{display:block;width:56px;margin-right:14px}.kmui-splitbutton-backcolor .kmui-btn.kmui-dropdown-toggle .kmui-caret{width:30px;height:30px;position:absolute;background:url(../images/toolbar.png) -100px 0 no-repeat;left:13px;top:6px}
+.kmui-splitbutton-backcolor .kmui-btn.kmui-dropdown-toggle:after{display:block;position:absolute;left:0;right:0;bottom:7px;height:20px;line-height:20px;content:'背景颜色'}
+.kmui-colorpicker{padding:0 10px 5px}.kmui-colorpicker .kmui-colorpicker-colorcell{display:block;width:15px;height:15px;cursor:pointer;border:none !important}.kmui-colorpicker .kmui-colorpicker-colorcell:hover{-webkit-transform:scale(1.6);box-shadow:1px 1px 3px rgba(0,0,0,0.3)}
+.kmui-colorpicker table,.kmui-colorpicker tr,.kmui-colorpicker td,.kmui-colorpicker a{margin:0;padding:0;border-collapse:collapse;border-spacing:0}
+.kmui-colorpicker td{padding:0 2px}
+.kmui-colorpicker tr.kmui-colorpicker-firstrow td{padding:4px 2px}
+.kmui-colorpicker td[colspan]{font-size:12px;color:#666;padding:12px 0 3px}
+.kmui-btn-bold{width:45px;margin-left:14px;margin-right:1px}.kmui-btn-bold .kmui-icon-bold{position:absolute;width:30px;height:30px;background:url(../images/toolbar.png) -160px 0;left:9px;top:6px}
+.kmui-btn-bold:after{display:block;position:absolute;left:0;right:0;bottom:7px;height:20px;line-height:20px;content:'加粗'}
+.kmui-btn-italic{width:45px;margin-right:14px}.kmui-btn-italic .kmui-icon-italic{position:absolute;width:30px;height:30px;background:url(../images/toolbar.png) -190px 0;left:9px;top:6px}
+.kmui-btn-italic:after{display:block;position:absolute;left:0;right:0;bottom:7px;height:20px;line-height:20px;content:'斜体'}
+.kmui-btn-markers .kmui-icon-markers{position:absolute;width:30px;height:30px;background:url(../images/toolbar.png) -220px 0;left:25px;top:6px}
+.kmui-btn-markers:after{display:block;position:absolute;left:0;right:0;bottom:7px;height:20px;line-height:20px;content:'标签'}
+.kmui-btn-zoom-in{background:none;width:20px;margin-left:14px}.kmui-btn-zoom-in:hover{background:none;border-color:transparent}
+.kmui-btn-zoom-in .kmui-icon-zoom-in{width:20px;height:20px;background:url(../images/toolbar.png) -290px 0;cursor:pointer;margin-top:20px}.kmui-btn-zoom-in .kmui-icon-zoom-in:hover{background-position:-310px 0}
+.kmui-btn-name-zoom{width:68px}.kmui-btn-name-zoom .kmui-button-label{display:inline-block;padding-left:10px;height:30px;line-height:30px;vertical-align:middle}
+.kmui-btn-name-zoom .kmui-caret{display:inline-block;background:url(../images/toolbar.png) -80px 0 no-repeat;width:20px;height:30px;vertical-align:middle}
+.kmui-btn-zoom-out{background:none;width:20px;margin-right:14px}.kmui-btn-zoom-out:hover{background:none;border-color:transparent}
+.kmui-btn-zoom-out .kmui-icon-zoom-out{width:20px;height:20px;background:url(../images/toolbar.png) -250px 0;cursor:pointer;margin-top:20px}.kmui-btn-zoom-out .kmui-icon-zoom-out:hover{background-position:-270px 0}
+.kmui-combobox-menu,.kmui-dropdown-menu{position:absolute;padding:3px 0;border:1px solid #b3aead;background:#f9f8f5;border-radius:3px;box-shadow:0 2px #ebebeb;max-height:300px;overflow-y:auto}.kmui-combobox-menu .kmui-combobox-item,.kmui-dropdown-menu .kmui-combobox-item,.kmui-combobox-menu li,.kmui-dropdown-menu li{min-height:30px;line-height:30px;font-size:12px;padding:0 40px 0 0;border-style:solid;border-width:1px 0;border-color:transparent;white-space:nowrap}.kmui-combobox-menu .kmui-combobox-item a,.kmui-dropdown-menu .kmui-combobox-item a,.kmui-combobox-menu li a,.kmui-dropdown-menu li a{display:block;padding-left:20px;text-decoration:none;color:#000}
+.kmui-combobox-menu .kmui-combobox-item .kmui-combobox-icon,.kmui-dropdown-menu .kmui-combobox-item .kmui-combobox-icon,.kmui-combobox-menu li .kmui-combobox-icon,.kmui-dropdown-menu li .kmui-combobox-icon{display:inline-block;width:20px;height:30px;vertical-align:middle}
+.kmui-combobox-menu .kmui-combobox-item .kmui-combobox-item-label,.kmui-dropdown-menu .kmui-combobox-item .kmui-combobox-item-label,.kmui-combobox-menu li .kmui-combobox-item-label,.kmui-dropdown-menu li .kmui-combobox-item-label{display:inline-block;height:30px;line-height:30px;vertical-align:middle}
+.kmui-combobox-menu .kmui-combobox-item:hover,.kmui-dropdown-menu .kmui-combobox-item:hover,.kmui-combobox-menu li:hover,.kmui-dropdown-menu li:hover{background:#ecf3e9;border-color:#beddbf}
+.kmui-combobox-menu .kmui-combobox-item.kmui-combobox-checked,.kmui-dropdown-menu .kmui-combobox-item.kmui-combobox-checked,.kmui-combobox-menu li.kmui-combobox-checked,.kmui-dropdown-menu li.kmui-combobox-checked{color:#61b864}.kmui-combobox-menu .kmui-combobox-item.kmui-combobox-checked .kmui-combobox-icon,.kmui-dropdown-menu .kmui-combobox-item.kmui-combobox-checked .kmui-combobox-icon,.kmui-combobox-menu li.kmui-combobox-checked .kmui-combobox-icon,.kmui-dropdown-menu li.kmui-combobox-checked .kmui-combobox-icon{background:url(../images/toolbar.png) -60px 0 no-repeat}
+.kmui-combobox-menu .kmui-combobox-item.kmui-combobox-item-disabled,.kmui-dropdown-menu .kmui-combobox-item.kmui-combobox-item-disabled,.kmui-combobox-menu li.kmui-combobox-item-disabled,.kmui-dropdown-menu li.kmui-combobox-item-disabled{opacity:.3}.kmui-combobox-menu .kmui-combobox-item.kmui-combobox-item-disabled:hover,.kmui-dropdown-menu .kmui-combobox-item.kmui-combobox-item-disabled:hover,.kmui-combobox-menu li.kmui-combobox-item-disabled:hover,.kmui-dropdown-menu li.kmui-combobox-item-disabled:hover{background:none;border-color:transparent}
+.kmui-combobox-menu .kmui-combobox-item-separator,.kmui-dropdown-menu .kmui-combobox-item-separator{height:0;line-height:0;border-top:1px solid #deddd7;border-bottom:1px solid #fff;margin:2px 0}
+.kmui-modal{outline:none;background:#fefefe;border-radius:4px;border:1px solid #b2aead}.kmui-modal .kmui-close{width:16px;height:16px;border-radius:100%;background-color:#ccc;position:absolute;right:7px;top:7px;cursor:pointer}.kmui-modal .kmui-close:after{display:block;width:16px;height:16px;content:'x';font-family:'Arial';text-align:center;color:#f0f0f0;line-height:16px;font-size:9px}
+.kmui-modal .kmui-close:hover{background-color:#ddd}.kmui-modal .kmui-close:hover:after{color:#fff}
+.kmui-modal .kmui-close:active{background-color:#8b0000}
+.kmui-modal-header .kmui-title{background:#f9f8f5;font-size:14px;margin:0;padding:8px 12px;cursor:move;border-radius:4px 4px 0 0}
+.kmui-dialog-markers{position:absolute !important;top:75px;right:10px}
+.kmui-dialog-markers-body{padding-bottom:5px}.kmui-dialog-markers-body h4{font-size:12px}
+.icon-list{margin:0;padding:0;background:#fefefe}
+.icon-list li{padding:5px 10px;margin:0;font-size:12px;list-style:none;cursor:pointer;color:#333;font-family:Arial,"Heiti SC","Microsoft Yahei"}
+.icon-list li:hover,.icon-list li.active{background:#ebf7e6}
+.icon-list li span.icon{display:inline-block;width:20px;height:20px;vertical-align:middle;margin-right:10px}

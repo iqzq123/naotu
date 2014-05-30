@@ -16,7 +16,7 @@ $.wordCountAdaptive  = function( word, hasSuffix ) {
     $tmpNode.remove();
     $tmpNode = null;
 
-    if( width < 50 ) {
+    if( width < 80 ) {
 
         return word;
 

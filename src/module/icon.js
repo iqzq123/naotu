@@ -10,7 +10,7 @@ KityMinder.registerModule("IconModule", function () {
 		node.getContRc().addShape(_rc);
 		_number.setTranslate(6, 15);
 		var rcHeight = _rc.getHeight();
-		_rc.setTranslate(0, -rcHeight / 2);
+		_rc.setTranslate(-5, -rcHeight / 2);
 	};
 
 	var renderProgressIcon = function (node, val) {
@@ -64,7 +64,7 @@ KityMinder.registerModule("IconModule", function () {
 		var pre = node.getData("PriorityIcon");
 		var style = minder.getCurrentLayoutStyle()[node.getType()];
 		if (!pre) _rc.setTranslate(_rc.getWidth() / 2, 0);
-		else _rc.setTranslate(_contRc.getWidth() + style.spaceLeft, 0);
+		else _rc.setTranslate(_contRc.getWidth() + 5, 0);
 	};
 	var setPriorityCommand = kity.createClass("SetPriorityCommand", (function () {
 		return {

@@ -53,7 +53,7 @@ KityMinder.registerModule( "fontmodule", function () {
                     } )
                 },
                 queryState:function(km){
-                    return km.getSelectedNodes().length == 0 ? -1 : 0
+                    return km.getSelectedNodes().length === 0 ? -1 : 0;
                 },
                 queryValue: function(km) {
                     if (km.getSelectedNodes().length == 1) {
@@ -74,7 +74,7 @@ KityMinder.registerModule( "fontmodule", function () {
                     } );
                 },
                 queryState:function(km){
-                    return km.getSelectedNodes().length == 0 ? -1 : 0
+                    return km.getSelectedNodes().length === 0 ? -1 : 0;
                 },
                 queryValue: function (km) {
                     if (km.getSelectedNodes().length == 1) {
