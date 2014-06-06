@@ -26,11 +26,32 @@
         <div class="dialog-body">
             <div id="kityminder" onselectstart="return false"></div>
         </div>
-        <div class="dialog-bottom"></div>
+        <div class="dialog-bottom">
+            <button class="ok">确定</button>
+        </div>
     </div>
 </body>
 <script>
     km = KM.getKityMinder('kityminder');
     km.initStyle();
+
+    $('body').delegate('img', 'dblclick', function() {
+        $('#dialog').show();
+        km.importData($(this).attr('minderData'), 'json');
+    });
+    function outputImage() {
+        km.removeAllSelectedNodes();
+        km.exportData('base64').then(function(base64, width, height) {
+            var json = km.exportData('json');
+            var $img = $('<img>').appendTo('body').attr({
+                width: width,
+                height: height,
+                src: base64,
+                minderData: json
+            });
+            $('#dialog').hide();
+        });
+    }
+    $('.ok').click(outputImage);
 </script>
 </html>

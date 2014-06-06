@@ -14,8 +14,8 @@ KityMinder.registerProtocal( "png", function () {
 				svgXml,
 				$svg,
 
-				bgDeclare = getComputedStyle( domContainer ).backgroundImage,
-				bgUrl = /url\((.+)\)$/.exec( bgDeclare )[ 1 ],
+			bgDeclare = getComputedStyle(domContainer).backgroundImage,
+			bgUrl = /url\((.+)\)$/.exec(bgDeclare)[1],
 
 				renderContainer = km.getRenderContainer(),
 				renderBox = renderContainer.getRenderBox(),
