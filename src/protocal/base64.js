@@ -1,7 +1,7 @@
 KityMinder.registerProtocal("base64", function () {
     function loadImage(url, callback) {
         var image = new Image();
-        image.onload = callback;
+        image.addEventListener('load', callback, false);
         image.src = url;
     }
 
@@ -47,31 +47,15 @@ KityMinder.registerProtocal("base64", function () {
                 type: "image/svg+xml;charset=utf-8"
             });
 
-            DomURL = window.URL || window.webkitURL || window;
-
-            url = DomURL.createObjectURL(blob);
-
             canvas.width = width + padding * 2;
             canvas.height = height + padding * 2;
 
-
-            function drawImage(ctx, image, x, y) {
-                ctx.drawImage(image, x, y);
-            }
-
-            function generateDataUrl(canvas) {
-                var url = canvas.toDataURL('base64');
-                return url;
-            }
-            loadImage(url, function () {
-                var svgImage = this;
-                var downloadUrl;
-
-                drawImage(ctx, svgImage, padding, padding);
-                DomURL.revokeObjectURL(url);
-                downloadUrl = generateDataUrl(canvas);
+            /* requires canvg.js */
+            ctx.drawSvg(svgXml, padding, padding);
+            url = canvas.toDataURL('base64');
+            setTimeout(function() {
                 if (finishCallback) {
-                    finishCallback(downloadUrl, canvas.width, canvas.height);
+                    finishCallback(url, canvas.width, canvas.height);
                 }
             });
 

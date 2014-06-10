@@ -1,21 +1,21 @@
-KityMinder.registerProtocal( "png", function () {
-	function loadImage( url, callback ) {
+KityMinder.registerProtocal("png", function () {
+	function loadImage(url, callback) {
 		var image = new Image();
 		image.onload = callback;
-		console.log( url );
+		image.addEventListener('load', callback, false);
 		image.src = url;
 	}
 
 	return {
 		fileDescription: 'PNG 图片（暂不支持IE）',
 		fileExtension: '.png',
-		encode: function ( json, km ) {
+		encode: function (json, km) {
 			var domContainer = km.getPaper().container,
 				svgXml,
 				$svg,
 
-			bgDeclare = getComputedStyle(domContainer).backgroundImage,
-			bgUrl = /url\((.+)\)$/.exec(bgDeclare)[1],
+				bgDeclare = getComputedStyle(domContainer).backgroundImage,
+				bgUrl = /url\((.+)\)$/.exec(bgDeclare)[1],
 
 				renderContainer = km.getRenderContainer(),
 				renderBox = renderContainer.getRenderBox(),
@@ -24,76 +24,76 @@ KityMinder.registerProtocal( "png", function () {
 				height = renderBox.height,
 				padding = 20,
 
-				canvas = document.createElement( 'canvas' ),
-				ctx = canvas.getContext( '2d' ),
+				canvas = document.createElement('canvas'),
+				ctx = canvas.getContext('2d'),
 				blob, DomURL, url, img, finishCallback;
 
-			bgUrl = bgUrl.replace( /"/g, '' );
-			renderContainer.translate( -renderBox.x, -renderBox.y );
+			bgUrl = bgUrl.replace(/"/g, '');
+			renderContainer.translate(-renderBox.x, -renderBox.y);
 
 			svgXml = km.getPaper().container.innerHTML;
 
-			renderContainer.translate( renderBox.x, renderBox.y );
+			renderContainer.translate(renderBox.x, renderBox.y);
 
-			$svg = $( svgXml );
-			$svg.attr( {
+			$svg = $(svgXml);
+			$svg.attr({
 				width: renderBox.width,
 				height: renderBox.height,
 				style: 'font-family: Arial, "Microsoft Yahei","Heiti SC";'
-			} );
+			});
 
 			// need a xml with width and height
-			svgXml = $( '<div></div>' ).append( $svg ).html();
+			svgXml = $('<div></div>').append($svg).html();
 
 			// svg 含有 &nbsp; 符号导出报错 Entity 'nbsp' not defined
-			svgXml = svgXml.replace( /&nbsp;/g, '&#xa0;' );
+			svgXml = svgXml.replace(/&nbsp;/g, '&#xa0;');
 
-			blob = new Blob( [ svgXml ], {
+			blob = new Blob([svgXml], {
 				type: "image/svg+xml;charset=utf-8"
-			} );
+			});
 
 			DomURL = window.URL || window.webkitURL || window;
 
-			url = DomURL.createObjectURL( blob );
+			url = DomURL.createObjectURL(blob);
 
 			canvas.width = width + padding * 2;
 			canvas.height = height + padding * 2;
 
-			function fillBackground( ctx, image, width, height ) {
+			function fillBackground(ctx, image, width, height) {
 				ctx.save();
-				ctx.fillStyle = ctx.createPattern( image, "repeat" );
-				ctx.fillRect( 0, 0, width, height );
+				ctx.fillStyle = ctx.createPattern(image, "repeat");
+				ctx.fillRect(0, 0, width, height);
 				ctx.restore();
 			}
 
-			function drawImage( ctx, image, x, y ) {
-				ctx.drawImage( image, x, y );
+			function drawImage(ctx, image, x, y) {
+				ctx.drawImage(image, x, y);
 			}
 
-			function generateDataUrl( canvas ) {
-				var url = canvas.toDataURL( 'png' );
+			function generateDataUrl(canvas) {
+				var url = canvas.toDataURL('png');
 				return url;
 			}
-			loadImage( url, function () {
+			loadImage(url, function () {
 				var svgImage = this;
-				loadImage( bgUrl, function () {
+				loadImage(bgUrl, function () {
 					var downloadUrl;
-					fillBackground( ctx, this, canvas.width, canvas.height );
-					drawImage( ctx, svgImage, padding, padding );
-					DomURL.revokeObjectURL( url );
-					downloadUrl = generateDataUrl( canvas );
-					if ( finishCallback ) {
-						finishCallback( downloadUrl );
+					fillBackground(ctx, this, canvas.width, canvas.height);
+					drawImage(ctx, svgImage, padding, padding);
+					DomURL.revokeObjectURL(url);
+					downloadUrl = generateDataUrl(canvas);
+					if (finishCallback) {
+						finishCallback(downloadUrl);
 					}
-				} );
-			} );
+				});
+			});
 
 			return {
-				then: function ( callback ) {
+				then: function (callback) {
 					finishCallback = callback;
 				}
 			};
 		},
 		recognizePriority: -1
 	};
-} );
+});
