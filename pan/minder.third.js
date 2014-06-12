@@ -1,5 +1,5 @@
-"use strict";
 ( function () {
+    "use strict";
     var minder;
 
     /**
@@ -32,7 +32,15 @@
             throw new Error( '不支持的脑图格式：' + type );
         }
 
-        minder = minder || KM.getKityMinder( target );
+        if (!minder) {
+            minder = KM.getKityMinder( target );
+            // 注册渲染事件
+        }
+        minder.on( 'renderprogress', onRenderProgress );
+        minder.on( 'rendercomplete', onRenderComplete );
+        minder.on( 'rendererror', function(e) { errorCall('渲染失败'); } );
+        minder.on( 'importerror', function(e) { errorCall('文件可能已损坏或非脑图文件。'); } );
+
 
         // 渲染进度通知
         function onRenderProgress( e ) {
@@ -48,21 +56,14 @@
             minder.off( 'rendercomplete', onRenderComplete );
         }
 
-        // 注册渲染事件
-        minder.on( 'renderprogress', onRenderProgress );
-        minder.on( 'rendercomplete', onRenderComplete );
 
-        //TODO: 事件好了之后删掉下面一行
-        // minder.on( 'import', function () {
-        //     minder.fire( 'rendercomplete' );
-        // } );
 
         loadFile( url, type, minder, function ( eventType, e, xhr ) {
             switch ( eventType ) {
 
             case 'abort':
             case 'error':
-                errorCall( 'Fail to download: ' + option.url );
+                errorCall( '下载失败: ' + option.url );
                 break;
 
             case 'progress':
@@ -74,6 +75,8 @@
                 if ( xhr.status == 200 && xhr.readyState == 4 /* DONE */ ) {
                     progressCall( downloadPercentTotal );
                     minder.importData( xhr.response, fileConf[ type ].protocal );
+                } else {
+                    errorCall('HTTP(' + xhr.status + ')');
                 }
             }
         } );

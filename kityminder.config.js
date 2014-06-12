@@ -63,7 +63,7 @@
         'KITYMINDER_HOME_URL': getKMBasePath(),
         //定义工具栏
         toolbars: [
-            'hand zoom-in zoom-out expand contract| saveto'
+            'zoom-in zoom zoom-out expand contract | saveto'
         ]
         //只读模式，默认是false
         ,readOnly: true
@@ -88,6 +88,6 @@
         //     defaultSubShow: 5
         // }
         //配置放大缩小的比例
-        //,zoom:[50,80,100,120,150,200]
+        ,zoom:[100,120,150,200]
     };
 } )();

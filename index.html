@@ -9,8 +9,8 @@
 
     <script src="lib/jquery-2.1.0.min.js" charset="utf-8"></script>
 
-    <script src="kity/dist/kitygraph.all.js" charset="utf-8"></script>
-    <script src="import.js" charset="utf-8"></script>
+    <script src="lib/kitygraph.all.js" charset="utf-8"></script>
+    <script src="kityminder.all.js" charset="utf-8"></script>
     <script src="kityminder.config.js" charset="utf-8"></script>
     <script src="lang/zh-cn/zh-cn.js" charset="utf-8"></script>
     
@@ -25,17 +25,26 @@
     
     <link rel="stylesheet" href="pan/pan.css">
     <script src="pan/minder.third.js" charset="utf-8"></script>
+    <style>
+        a.file {
+            padding: 10px;
+            text-decoration: underline;
+            cursor: pointer;
+        }
+    </style>
 </head>
 <style>
 </style>
 <body>
     <div class="files">
-        <a class="file" data-type="xmind" data-url="https://c.pcs.baidu.com/rest/2.0/pcs/file?path=%2Fapps%2Fkityminder%2F%E7%99%BE%E5%BA%A6xmind-%E7%BD%91%E7%9B%98.xmind&access_token=52.a168cdef7648c17628a0695e40771fd7.2592000.1401277148.2936331757-2246711&method=download" href="javascript:;">XMind 格式</a>
-        &nbsp;&nbsp;&nbsp;&nbsp;
-        <a class="file" data-type="km" data-url="https://c.pcs.baidu.com/rest/2.0/pcs/file?path=%2Fapps%2Fkityminder%2Fkm%E6%A0%BC%E5%BC%8F-%E7%BD%91%E7%9B%98.km&access_token=52.cadcb9ad33b982654c2d0cd641b33b54.2592000.1401332814.2936331757-2246711&method=download" href="javascript:;">KM 格式</a>
-        &nbsp;&nbsp;&nbsp;&nbsp;
-        <a class="file" data-type="mmap" data-url="/km/pan/testfile.mmap" href="javascript:;">Mind Manager 格式</a>
-        <a class="file" data-type="xmind" data-url="/km/pan/testfile2.xmind" href="javascript:;">xMind损坏</a>
+        <a class="file" data-type="xmind" data-url="pan/test/xmind.xmind">XMind 格式</a>
+        <a class="file" data-type="km" data-url="pan/test/km.km">KM 格式</a>
+        <a class="file" data-type="mmap" data-url="pan/test/mindmanager.mmap">Mind Manager 格式</a>
+        <a class="file" data-type="mm" data-url="pan/test/freemind.mm">Free Mind 格式</a>
+        <a class="file" data-type="xmind" data-url="pan/test/xmind.broken.xmind">XMind 格式（损坏）</a>
+        <a class="file" data-type="km" data-url="pan/test/km.broken.km">KM 格式（损坏）</a>
+        <a class="file" data-type="mmap" data-url="pan/test/mindmanager.broken.mmap">Mind Manager 格式（损坏）</a>
+        <a class="file" data-type="mm" data-url="pan/test/freemind.broken.mm">Free Mind 格式（损坏）</a>
     </div>
 
     <!--Dialog 模板-->
