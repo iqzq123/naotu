@@ -33,6 +33,9 @@
         <a class="file" data-type="xmind" data-url="https://c.pcs.baidu.com/rest/2.0/pcs/file?path=%2Fapps%2Fkityminder%2F%E7%99%BE%E5%BA%A6xmind-%E7%BD%91%E7%9B%98.xmind&access_token=52.a168cdef7648c17628a0695e40771fd7.2592000.1401277148.2936331757-2246711&method=download" href="javascript:;">XMind 格式</a>
         &nbsp;&nbsp;&nbsp;&nbsp;
         <a class="file" data-type="km" data-url="https://c.pcs.baidu.com/rest/2.0/pcs/file?path=%2Fapps%2Fkityminder%2Fkm%E6%A0%BC%E5%BC%8F-%E7%BD%91%E7%9B%98.km&access_token=52.cadcb9ad33b982654c2d0cd641b33b54.2592000.1401332814.2936331757-2246711&method=download" href="javascript:;">KM 格式</a>
+        &nbsp;&nbsp;&nbsp;&nbsp;
+        <a class="file" data-type="mmap" data-url="/km/pan/testfile.mmap" href="javascript:;">Mind Manager 格式</a>
+        <a class="file" data-type="xmind" data-url="/km/pan/testfile2.xmind" href="javascript:;">xMind损坏</a>
     </div>
 
     <!--Dialog 模板-->
@@ -61,6 +64,17 @@
 
         $dialog.show();
         $loading.show();
+        ///加上这一段
+        function hasSVG(){ 
+            SVG_NS = 'http://www.w3.org/2000/svg'; 
+            return !!document.createElementNS && 
+            !!document.createElementNS(SVG_NS, 'svg').createSVGRect; 
+        }
+        if(!hasSVG()){
+            $loadingProgress.text('暂不支持低端浏览器');
+            return false;
+        }
+        ///
         $loadingProgress.text('正在加载...');
 
         KityMinder.load({

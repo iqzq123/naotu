@@ -31,7 +31,8 @@ KityMinder.registerModule( "LayoutModule", function () {
 			return name;
 		},
 		getCurrentLayoutStyle: function () {
-			var curStyle = this.getCurrentStyle();
+			//var curStyle = this.getCurrentStyle();
+			var curStyle = 'default';
 			return this.getLayoutStyle( curStyle ).getCurrentLayoutStyle.call( this );
 		},
 		highlightNode: function ( node ) {
@@ -104,7 +105,7 @@ KityMinder.registerModule( "LayoutModule", function () {
 			n.getBgRc().clear();
 		} );
 		km.setCurrentStyle( style );
-		km.initStyle();
+		//km.initStyle();
 		return style;
 	};
 	var SwitchLayoutCommand = kity.createClass( "SwitchLayoutCommand", ( function () {

@@ -53,9 +53,9 @@
         minder.on( 'rendercomplete', onRenderComplete );
 
         //TODO: 事件好了之后删掉下面一行
-        minder.on( 'import', function () {
-            minder.fire( 'rendercomplete' );
-        } );
+        // minder.on( 'import', function () {
+        //     minder.fire( 'rendercomplete' );
+        // } );
 
         loadFile( url, type, minder, function ( eventType, e, xhr ) {
             switch ( eventType ) {
@@ -69,7 +69,7 @@
                 if ( e.lengthComputable ) {
                     progressCall( downloadPercentTotal * e.loaded / e.total );
                 }
-
+                break;
             case 'load':
                 if ( xhr.status == 200 && xhr.readyState == 4 /* DONE */ ) {
                     progressCall( downloadPercentTotal );
