@@ -51,6 +51,8 @@
         function onRenderComplete( e ) {
             progressCall( 100 );
             successCall( minder );
+            minder.execCommand('camera', minder.getRoot());
+            minder.execCommand('hand', true);
             // 渲染完成需要自动解绑
             minder.off( 'renderprogress', onRenderProgress );
             minder.off( 'rendercomplete', onRenderComplete );
