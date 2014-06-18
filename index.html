@@ -59,11 +59,13 @@
 <script>
 
     var $dialog = $('.km-dialog').hide(),
-        $close = $dialog.find('.close')
+        $close = $dialog.find('.close'),
         $loading = $dialog.find('.loading').hide(),
-        $loadingProgress = $loading.find('.loading-progress');
+        $loadingProgress = $loading.find('.loading-progress'),
+        minder;
 
     $close.click(function() {
+        //minder.fire('renderinterupt');
         $dialog.hide();
     });
 
@@ -86,7 +88,7 @@
         ///
         $loadingProgress.text('正在加载...');
 
-        KityMinder.load({
+        minder = KityMinder.load({
             url: $(this).data('url'),
             type: $(this).data('type'),
             target: 'kity-minder',

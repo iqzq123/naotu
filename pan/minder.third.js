@@ -58,14 +58,12 @@
             minder.off( 'rendercomplete', onRenderComplete );
         }
 
-
-
         loadFile( url, type, minder, function ( eventType, e, xhr ) {
             switch ( eventType ) {
 
             case 'abort':
             case 'error':
-                errorCall( '下载失败: ' + option.url );
+                errorCall( 'Fail to download: ' + option.url );
                 break;
 
             case 'progress':
@@ -77,8 +75,6 @@
                 if ( xhr.status == 200 && xhr.readyState == 4 /* DONE */ ) {
                     progressCall( downloadPercentTotal );
                     minder.importData( xhr.response, fileConf[ type ].protocal );
-                } else {
-                    errorCall('HTTP(' + xhr.status + ')');
                 }
             }
         } );

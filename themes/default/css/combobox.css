@@ -52,3 +52,6 @@
     opacity: 0.2;
     filter: alpha(opacity = 20);
 }
+.kmui-combobox .kmui-tooltip {
+    display: none !important;
+}
