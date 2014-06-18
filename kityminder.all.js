@@ -20476,6 +20476,12 @@
             fileExtension: '.png',
 
             encode: function(json, km) {
+                var paper = km.getPaper();
+                var viewport = paper.getViewPort();
+                var originZoom = viewport.zoom;
+
+                viewport.zoom = 1;
+                paper.setViewPort(viewport);
 
                 var domContainer = km.getPaper().container,
 
@@ -20524,6 +20530,8 @@
 
 
                 renderContainer.translate(renderBox.x, renderBox.y);
+                viewport.zoom = originZoom;
+                paper.setViewPort(viewport);
 
 
 
