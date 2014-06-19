@@ -20680,6 +20680,13 @@
             mineType: 'image/svg+xml',
 
             encode: function(json, km) {
+                
+                var paper = km.getPaper();
+                var viewport = paper.getViewPort();
+                var originZoom = viewport.zoom;
+
+                viewport.zoom = 1;
+                paper.setViewPort(viewport);
 
                 var domContainer = km.getPaper().container,
 
@@ -20734,6 +20741,8 @@
                 // need a xml with width and height
 
                 svgXml = $('<div></div>').append($svg).html();
+                viewport.zoom = originZoom;
+                paper.setViewPort(viewport);
 
 
 
