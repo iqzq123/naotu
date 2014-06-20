@@ -63,7 +63,7 @@
         'KITYMINDER_HOME_URL': getKMBasePath(),
         //定义工具栏
         toolbars: [
-            'zoom-in zoom zoom-out expand contract | saveto'
+            'zoom-in zoom zoom-out expand contract' + (/webkit/i.test(navigator.userAgent) ? ' | saveto' : '')
         ]
         //只读模式，默认是false
         ,readOnly: true
